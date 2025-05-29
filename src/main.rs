@@ -1,5 +1,6 @@
 #![allow(clippy::cast_precision_loss)] // We accept precision loss for f32 conversions
 #![allow(clippy::needless_pass_by_value)] // Bevy systems require owned Res parameters
+#![allow(clippy::multiple_crate_versions)] // Bevy dependencies have multiple versions
 
 use bevy::prelude::*;
 use clap::Parser;
@@ -26,24 +27,29 @@ fn main() {
     let args = Args::parse();
 
     // Read dot content from file or stdin
-    let dot_content = if let Some(filename) = args.file {
-        std::fs::read_to_string(&filename).unwrap_or_else(|e| {
-            eprintln!("Error reading file '{filename}': {e}");
-            std::process::exit(1);
-        })
-    } else if !io::stdin().is_terminal() {
-        // Read from stdin if it's piped
-        let mut buffer = String::new();
-        io::stdin().read_to_string(&mut buffer).unwrap_or_else(|e| {
-            eprintln!("Error reading from stdin: {e}");
-            std::process::exit(1);
-        });
-        buffer
-    } else {
-        eprintln!("Error: No input provided. Either specify a file or pipe data to stdin.");
-        eprintln!("Usage: bevydot [FILE] or command | bevydot");
-        std::process::exit(1);
-    };
+    let dot_content = args.file.map_or_else(
+        || {
+            if io::stdin().is_terminal() {
+                eprintln!("Error: No input provided. Either specify a file or pipe data to stdin.");
+                eprintln!("Usage: bevydot [FILE] or command | bevydot");
+                std::process::exit(1);
+            } else {
+                // Read from stdin if it's piped
+                let mut buffer = String::new();
+                io::stdin().read_to_string(&mut buffer).unwrap_or_else(|e| {
+                    eprintln!("Error reading from stdin: {e}");
+                    std::process::exit(1);
+                });
+                buffer
+            }
+        },
+        |filename| {
+            std::fs::read_to_string(&filename).unwrap_or_else(|e| {
+                eprintln!("Error reading file '{filename}': {e}");
+                std::process::exit(1);
+            })
+        },
+    );
 
     App::new()
         .add_plugins(DefaultPlugins)
@@ -169,24 +175,23 @@ fn parse_dot_file(content: &str) -> GraphData {
         let trimmed = line.trim();
         if trimmed.contains("->") {
             // Remove comments
-            let edge_line = if let Some(comment_pos) = trimmed.find("//") {
-                &trimmed[..comment_pos]
-            } else {
-                trimmed
-            };
+            let edge_line = trimmed
+                .find("//")
+                .map_or(trimmed, |comment_pos| &trimmed[..comment_pos]);
 
             let parts: Vec<&str> = edge_line.split("->").collect();
             if parts.len() >= 2 {
                 let from = parts[0].trim().trim_matches('"');
                 let to_part = parts[1].trim();
-                let to = if let Some(bracket_pos) = to_part.find('[') {
-                    to_part[..bracket_pos]
-                        .trim()
-                        .trim_matches('"')
-                        .trim_end_matches(';')
-                } else {
-                    to_part.trim_end_matches(';').trim().trim_matches('"')
-                };
+                let to = to_part.find('[').map_or_else(
+                    || to_part.trim_end_matches(';').trim().trim_matches('"'),
+                    |bracket_pos| {
+                        to_part[..bracket_pos]
+                            .trim()
+                            .trim_matches('"')
+                            .trim_end_matches(';')
+                    },
+                );
 
                 // Ensure nodes exist
                 let from_idx = *node_map.entry(from.to_string()).or_insert_with(|| {
@@ -244,7 +249,9 @@ fn setup_camera(commands: &mut Commands, camera_config: &Res<CameraConfig>) {
     // Calculate initial position based on orbit angles and distance
     let horizontal_distance = controller.distance * controller.pitch_angle.cos();
     let x = horizontal_distance * controller.orbit_angle.cos();
-    let y = controller.distance * controller.pitch_angle.sin() + controller.look_at.y;
+    let y = controller
+        .distance
+        .mul_add(controller.pitch_angle.sin(), controller.look_at.y);
     let z = horizontal_distance * controller.orbit_angle.sin();
 
     commands.spawn((
@@ -334,7 +341,7 @@ fn create_graph_visualization(
         let count_at_level = level_counts[&node_info.level];
 
         // Calculate position with hierarchical layout
-        let level_radius = 5.0 + (node_info.level as f32 * 2.0);
+        let level_radius = (node_info.level as f32).mul_add(2.0, 5.0);
         let angle = 2.0 * std::f32::consts::PI * (*level_idx as f32) / count_at_level as f32;
         let x = level_radius * angle.cos();
         let z = level_radius * angle.sin();
@@ -414,7 +421,7 @@ fn create_graph_visualization(
         let level_idx = level_indices.entry(node_info.level).or_insert(0);
         let count_at_level = level_counts[&node_info.level];
 
-        let level_radius = 5.0 + (node_info.level as f32 * 2.0);
+        let level_radius = (node_info.level as f32).mul_add(2.0, 5.0);
         let angle = 2.0 * std::f32::consts::PI * (*level_idx as f32) / count_at_level as f32;
         let x = level_radius * angle.cos();
         let z = level_radius * angle.sin();
@@ -484,15 +491,19 @@ fn camera_controls(
             || keyboard_input.pressed(KeyCode::Equal)  // Plus key
             || keyboard_input.pressed(KeyCode::NumpadAdd)
         {
-            controller.distance =
-                (controller.distance - controller.speed * time.delta_secs()).max(5.0);
+            controller.distance = controller
+                .speed
+                .mul_add(-time.delta_secs(), controller.distance)
+                .max(5.0);
         }
         if keyboard_input.pressed(KeyCode::PageDown)
             || keyboard_input.pressed(KeyCode::Minus)
             || keyboard_input.pressed(KeyCode::NumpadSubtract)
         {
-            controller.distance =
-                (controller.distance + controller.speed * time.delta_secs()).min(50.0);
+            controller.distance = controller
+                .speed
+                .mul_add(time.delta_secs(), controller.distance)
+                .min(50.0);
         }
 
         if shift {
@@ -504,21 +515,25 @@ fn camera_controls(
                 controller.orbit_angle -= controller.rotation_speed * time.delta_secs();
             }
             if keyboard_input.pressed(KeyCode::ArrowUp) {
-                controller.pitch_angle = (controller.pitch_angle
-                    - controller.rotation_speed * time.delta_secs())
-                .clamp(-std::f32::consts::PI / 3.0, std::f32::consts::PI / 3.0);
+                controller.pitch_angle = controller
+                    .rotation_speed
+                    .mul_add(-time.delta_secs(), controller.pitch_angle)
+                    .clamp(-std::f32::consts::PI / 3.0, std::f32::consts::PI / 3.0);
                 // Limit to +/- 60 degrees
             }
             if keyboard_input.pressed(KeyCode::ArrowDown) {
-                controller.pitch_angle = (controller.pitch_angle
-                    + controller.rotation_speed * time.delta_secs())
-                .clamp(-std::f32::consts::PI / 3.0, std::f32::consts::PI / 3.0);
+                controller.pitch_angle = controller
+                    .rotation_speed
+                    .mul_add(time.delta_secs(), controller.pitch_angle)
+                    .clamp(-std::f32::consts::PI / 3.0, std::f32::consts::PI / 3.0);
             }
 
             // Update camera position based on orbit angles
             let horizontal_distance = controller.distance * controller.pitch_angle.cos();
             let x = horizontal_distance * controller.orbit_angle.cos();
-            let y = controller.distance * controller.pitch_angle.sin() + controller.look_at.y;
+            let y = controller
+                .distance
+                .mul_add(controller.pitch_angle.sin(), controller.look_at.y);
             let z = horizontal_distance * controller.orbit_angle.sin();
 
             transform.translation = controller.look_at + Vec3::new(x, y, z);
@@ -559,7 +574,9 @@ fn camera_controls(
         {
             let horizontal_distance = controller.distance * controller.pitch_angle.cos();
             let x = horizontal_distance * controller.orbit_angle.cos();
-            let y = controller.distance * controller.pitch_angle.sin() + controller.look_at.y;
+            let y = controller
+                .distance
+                .mul_add(controller.pitch_angle.sin(), controller.look_at.y);
             let z = horizontal_distance * controller.orbit_angle.sin();
 
             transform.translation = controller.look_at + Vec3::new(x, y, z);
@@ -600,12 +617,12 @@ mod tests {
 
     #[test]
     fn test_parse_simple_graph() {
-        let dot_content = r#"
+        let dot_content = r"
             digraph G {
                 A -> B;
                 B -> C;
             }
-        "#;
+        ";
 
         let graph_data = parse_dot_file(dot_content);
 
@@ -695,8 +712,7 @@ mod tests {
 
         for (type_str, expected_type) in test_cases {
             let dot_content = format!(
-                "digraph G {{\n  \"TestNode\" [type=\"{}\"];\n  \"TestNode\" -> \"Dummy\";\n}}",
-                type_str
+                "digraph G {{\n  \"TestNode\" [type=\"{type_str}\"];\n  \"TestNode\" -> \"Dummy\";\n}}"
             );
 
             let graph_data = parse_dot_file(&dot_content);
@@ -751,7 +767,7 @@ mod tests {
 
         for (node_type, expected_size) in test_cases {
             let (color, size) = get_node_appearance(&node_type);
-            assert_eq!(size, expected_size);
+            assert!((size - expected_size).abs() < f32::EPSILON);
             // Just verify we got a color (specific values might change)
             assert!(color.to_srgba().red >= 0.0);
         }

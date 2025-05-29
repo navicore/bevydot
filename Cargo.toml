@@ -4,6 +4,11 @@ version = "0.2.0"
 edition = "2024"
 license = "MIT"
 authors = ["Ed Sweeney <ed@onextent.com>"]
+description = "3D visualization of Graphviz dot files using Bevy"
+repository = "https://github.com/navicore/bevydot"
+readme = "README.md"
+keywords = ["graphviz", "dot", "visualization", "3d", "bevy"]
+categories = ["visualization", "graphics"]
 
 [dependencies]
 bevy = "0.16"
