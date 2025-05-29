@@ -1,0 +1,57 @@
+digraph ProjectDependencies {
+    // Core project
+    "Main Application" [type="organization", level="3"];
+    
+    // Major modules
+    "Core Library" [type="lob", level="2"];
+    "UI Framework" [type="lob", level="2"];
+    "Data Layer" [type="lob", level="2"];
+    
+    // Libraries
+    "Auth Lib" [type="site", level="1"];
+    "Utils Lib" [type="site", level="1"];
+    "Widget Lib" [type="site", level="1"];
+    "Theme Lib" [type="site", level="1"];
+    "ORM Lib" [type="site", level="1"];
+    "Cache Lib" [type="site", level="1"];
+    
+    // External dependencies
+    "React" [type="team", level="0"];
+    "Express" [type="team", level="0"];
+    "PostgreSQL Driver" [type="team", level="0"];
+    "Redis Client" [type="team", level="0"];
+    "JWT Library" [type="team", level="0"];
+    "Lodash" [type="team", level="0"];
+    "Axios" [type="team", level="0"];
+    "Material UI" [type="team", level="0"];
+    
+    // Dependency tree
+    "Main Application" -> "Core Library";
+    "Main Application" -> "UI Framework";
+    "Main Application" -> "Data Layer";
+    
+    "Core Library" -> "Auth Lib";
+    "Core Library" -> "Utils Lib";
+    
+    "UI Framework" -> "Widget Lib";
+    "UI Framework" -> "Theme Lib";
+    
+    "Data Layer" -> "ORM Lib";
+    "Data Layer" -> "Cache Lib";
+    
+    "Auth Lib" -> "JWT Library";
+    "Utils Lib" -> "Lodash";
+    "Widget Lib" -> "React";
+    "Widget Lib" -> "Material UI";
+    "Theme Lib" -> "Material UI";
+    "ORM Lib" -> "PostgreSQL Driver";
+    "Cache Lib" -> "Redis Client";
+    
+    // Additional dependencies
+    "Core Library" -> "Axios";
+    "UI Framework" -> "React";
+    "Data Layer" -> "Express";
+    
+    // Circular dependency example (shown as dashed)
+    "Utils Lib" -> "Auth Lib" [style="dashed"];
+}

@@ -1,0 +1,45 @@
+digraph NetworkTopology {
+    // Core router (highest level)
+    "Core Router" [type="organization", level="3"];
+    
+    // Distribution switches
+    "Dist Switch A" [type="lob", level="2"];
+    "Dist Switch B" [type="lob", level="2"];
+    
+    // Access switches
+    "Access SW 1" [type="site", level="1"];
+    "Access SW 2" [type="site", level="1"];
+    "Access SW 3" [type="site", level="1"];
+    "Access SW 4" [type="site", level="1"];
+    
+    // End devices
+    "Server 1" [type="user", level="0"];
+    "Server 2" [type="user", level="0"];
+    "Workstation 1" [type="user", level="0"];
+    "Workstation 2" [type="user", level="0"];
+    "Workstation 3" [type="user", level="0"];
+    "IoT Device 1" [type="user", level="0"];
+    "IoT Device 2" [type="user", level="0"];
+    
+    // Network connections
+    "Core Router" -> "Dist Switch A";
+    "Core Router" -> "Dist Switch B";
+    
+    "Dist Switch A" -> "Access SW 1";
+    "Dist Switch A" -> "Access SW 2";
+    "Dist Switch B" -> "Access SW 3";
+    "Dist Switch B" -> "Access SW 4";
+    
+    "Access SW 1" -> "Server 1";
+    "Access SW 1" -> "Server 2";
+    "Access SW 2" -> "Workstation 1";
+    "Access SW 2" -> "Workstation 2";
+    "Access SW 3" -> "Workstation 3";
+    "Access SW 4" -> "IoT Device 1";
+    "Access SW 4" -> "IoT Device 2";
+    
+    // Redundant connections
+    "Dist Switch A" -> "Dist Switch B" [style="dashed"];
+    "Access SW 1" -> "Access SW 2" [style="dashed"];
+    "Access SW 3" -> "Access SW 4" [style="dashed"];
+}

@@ -1,0 +1,27 @@
+digraph SimpleGraph {
+    // A simple graph without custom attributes
+    // This tests the default behavior
+    
+    "Root";
+    "Node A";
+    "Node B";
+    "Node C";
+    "Node D";
+    "Node E";
+    "Node F";
+    
+    "Root" -> "Node A";
+    "Root" -> "Node B";
+    "Root" -> "Node C";
+    
+    "Node A" -> "Node D";
+    "Node A" -> "Node E";
+    
+    "Node B" -> "Node E";
+    "Node B" -> "Node F";
+    
+    "Node C" -> "Node F";
+    
+    // Create a cycle
+    "Node F" -> "Root";
+}

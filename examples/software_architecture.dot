@@ -1,0 +1,74 @@
+digraph SoftwareArchitecture {
+    // System level
+    "E-Commerce Platform" [type="organization", level="4"];
+    
+    // Service layer
+    "Frontend Services" [type="lob", level="3"];
+    "Backend Services" [type="lob", level="3"];
+    "Data Services" [type="lob", level="3"];
+    
+    // Application layer
+    "Web App" [type="site", level="2"];
+    "Mobile App" [type="site", level="2"];
+    "Admin Portal" [type="site", level="2"];
+    "API Gateway" [type="site", level="2"];
+    "Auth Service" [type="site", level="2"];
+    "Order Service" [type="site", level="2"];
+    "Payment Service" [type="site", level="2"];
+    "Cache Layer" [type="site", level="2"];
+    "Message Queue" [type="site", level="2"];
+    
+    // Component layer
+    "React Components" [type="team", level="1"];
+    "Vue Dashboard" [type="team", level="1"];
+    "REST APIs" [type="team", level="1"];
+    "GraphQL APIs" [type="team", level="1"];
+    "Auth Module" [type="team", level="1"];
+    "Payment Gateway" [type="team", level="1"];
+    "Redis Cluster" [type="team", level="1"];
+    "RabbitMQ" [type="team", level="1"];
+    
+    // Database layer
+    "PostgreSQL Main" [type="user", level="0"];
+    "MongoDB Analytics" [type="user", level="0"];
+    "ElasticSearch" [type="user", level="0"];
+    "Redis Sessions" [type="user", level="0"];
+    
+    // Connections
+    "E-Commerce Platform" -> "Frontend Services";
+    "E-Commerce Platform" -> "Backend Services";
+    "E-Commerce Platform" -> "Data Services";
+    
+    "Frontend Services" -> "Web App";
+    "Frontend Services" -> "Mobile App";
+    "Frontend Services" -> "Admin Portal";
+    
+    "Backend Services" -> "API Gateway";
+    "Backend Services" -> "Auth Service";
+    "Backend Services" -> "Order Service";
+    "Backend Services" -> "Payment Service";
+    
+    "Data Services" -> "Cache Layer";
+    "Data Services" -> "Message Queue";
+    
+    "Web App" -> "React Components";
+    "Admin Portal" -> "Vue Dashboard";
+    "API Gateway" -> "REST APIs";
+    "API Gateway" -> "GraphQL APIs";
+    "Auth Service" -> "Auth Module";
+    "Payment Service" -> "Payment Gateway";
+    "Cache Layer" -> "Redis Cluster";
+    "Message Queue" -> "RabbitMQ";
+    
+    "REST APIs" -> "PostgreSQL Main";
+    "GraphQL APIs" -> "PostgreSQL Main";
+    "Auth Module" -> "Redis Sessions";
+    "Payment Gateway" -> "PostgreSQL Main";
+    "Redis Cluster" -> "Redis Sessions";
+    "RabbitMQ" -> "MongoDB Analytics";
+    
+    // Cross-service communication
+    "Order Service" -> "Payment Service" [style="dashed"];
+    "Auth Service" -> "Redis Sessions" [style="dashed"];
+    "REST APIs" -> "ElasticSearch" [style="dashed"];
+}
