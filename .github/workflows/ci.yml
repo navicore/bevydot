@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: Swatinem/rust-cache@v2
+    - name: Run tests
+      run: cargo test --all-features
+
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        components: clippy
+    - uses: Swatinem/rust-cache@v2
+    - name: Run clippy
+      run: |
+        cargo clippy -- \
+          -D clippy::all \
+          -D clippy::pedantic \
+          -D clippy::nursery \
+          -D clippy::cargo \
+          -A clippy::module_name_repetitions \
+          -A clippy::must_use_candidate \
+          -A clippy::missing_errors_doc \
+          -A clippy::missing_panics_doc \
+          -A clippy::missing_docs_in_private_items \
+          -A clippy::missing_const_for_fn
+    - name: Run clippy on tests
+      run: |
+        cargo clippy --tests -- \
+          -D clippy::all \
+          -D clippy::pedantic \
+          -D clippy::nursery \
+          -D clippy::cargo \
+          -A clippy::module_name_repetitions \
+          -A clippy::must_use_candidate \
+          -A clippy::missing_errors_doc \
+          -A clippy::missing_panics_doc \
+          -A clippy::missing_docs_in_private_items \
+          -A clippy::missing_const_for_fn
+    - name: Run clippy on examples
+      run: |
+        cargo clippy --examples -- \
+          -D clippy::all \
+          -D clippy::pedantic \
+          -D clippy::nursery \
+          -D clippy::cargo \
+          -A clippy::module_name_repetitions \
+          -A clippy::must_use_candidate \
+          -A clippy::missing_errors_doc \
+          -A clippy::missing_panics_doc \
+          -A clippy::missing_docs_in_private_items \
+          -A clippy::missing_const_for_fn \
+          -A clippy::uninlined_format_args \
+          -A clippy::map_unwrap_or \
+          -A clippy::manual_let_else \
+          -A clippy::needless_collect \
+          -A clippy::single_match_else \
+          -A clippy::option_if_let_else
+
+  # Ensure documentation builds
+  doc:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: Swatinem/rust-cache@v2
+    - name: Build documentation
+      run: cargo doc --no-deps --all-features
+      env:
+        RUSTDOCFLAGS: "-D warnings"

@@ -1,0 +1,64 @@
+name: Release with Auto Version (PAT)
+
+on:
+  release:
+    types: [created]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  publish:
+    name: Auto-version and Publish
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Use a PAT so the commit will trigger other workflows
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+          ref: main
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          # Remove 'v' prefix if present
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Update version in Cargo.toml
+        run: |
+          # Extract current version
+          CURRENT_VERSION=$(grep "^version" Cargo.toml | head -1 | cut -d'"' -f2)
+          
+          if [ "$CURRENT_VERSION" != "${{ steps.version.outputs.version }}" ]; then
+            # Update version in Cargo.toml
+            sed -i "s/^version = .*/version = \"${{ steps.version.outputs.version }}\"/" Cargo.toml
+            
+            # Update Cargo.lock
+            cargo update
+            
+            # Configure git
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+            
+            # Commit and push
+            git add Cargo.toml Cargo.lock
+            git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+            git push origin HEAD:main
+            
+            echo "Version updated and pushed"
+          else
+            echo "Version already matches tag, skipping update"
+          fi
+
+      - name: Run tests
+        run: cargo test --all-features
+
+      - name: Publish to crates.io
+        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
