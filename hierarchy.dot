@@ -1,0 +1,45 @@
+digraph OrgHierarchy {
+    // Organization level (highest)
+    "ACME Corp" [type="organization", level="4"];
+    
+    // Line of Business level
+    "Sales LOB" [type="lob", level="3"];
+    "Engineering LOB" [type="lob", level="3"];
+    
+    // Site level
+    "NYC Site" [type="site", level="2"];
+    "SF Site" [type="site", level="2"];
+    
+    // Team level
+    "Sales Team A" [type="team", level="1"];
+    "Sales Team B" [type="team", level="1"];
+    "Dev Team 1" [type="team", level="1"];
+    
+    // User level (ground)
+    "John Doe" [type="user", level="0"];
+    "Jane Smith" [type="user", level="0"];
+    "Bob Wilson" [type="user", level="0"];
+    "Alice Brown" [type="user", level="0"];
+    "Charlie Davis" [type="user", level="0"];
+    
+    // Relationships
+    "ACME Corp" -> "Sales LOB";
+    "ACME Corp" -> "Engineering LOB";
+    
+    "Sales LOB" -> "NYC Site";
+    "Sales LOB" -> "SF Site";
+    "Engineering LOB" -> "SF Site";
+    
+    "NYC Site" -> "Sales Team A";
+    "SF Site" -> "Sales Team B";
+    "SF Site" -> "Dev Team 1";
+    
+    "Sales Team A" -> "John Doe";
+    "Sales Team A" -> "Jane Smith";
+    "Sales Team B" -> "Bob Wilson";
+    "Dev Team 1" -> "Alice Brown";
+    "Dev Team 1" -> "Charlie Davis";
+    
+    // Cross-functional relationship (user in multiple teams)
+    "Sales Team B" -> "Alice Brown" [style="dashed"];
+}

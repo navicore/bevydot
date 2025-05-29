@@ -1,0 +1,14 @@
+digraph G {
+    A [label="Node A"];
+    B [label="Node B"];
+    C [label="Node C"];
+    D [label="Node D"];
+    E [label="Node E"];
+    
+    A -> B;
+    A -> C;
+    B -> D;
+    C -> D;
+    C -> E;
+    D -> E;
+}
