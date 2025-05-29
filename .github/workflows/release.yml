@@ -19,6 +19,9 @@ jobs:
           token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
           ref: main
 
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0
+
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Extract version from tag
