@@ -1,3 +1,6 @@
+[![Release with Auto Version (PAT)](https://github.com/navicore/dotspace/actions/workflows/release.yml/badge.svg)](https://github.com/navicore/dotspace/actions/workflows/release.yml)
+[![Dependabot Updates](https://github.com/navicore/dotspace/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/navicore/dotspace/actions/workflows/dependabot/dependabot-updates)
+
 # dotspace
 
 Explore your Graphviz dot files in interactive 3D space. Transform static graph diagrams into navigable 3D experiences.
