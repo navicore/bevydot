@@ -1353,16 +1353,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevydot"
-version = "0.2.0"
-dependencies = [
- "bevy",
- "clap",
- "dot-parser",
- "petgraph 0.8.1",
-]
-
-[[package]]
 name = "bindgen"
 version = "0.70.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1981,6 +1971,16 @@ dependencies = [
  "either",
  "pest",
  "pest_derive",
+]
+
+[[package]]
+name = "dotspace"
+version = "0.2.0"
+dependencies = [
+ "bevy",
+ "clap",
+ "dot-parser",
+ "petgraph 0.8.1",
 ]
 
 [[package]]

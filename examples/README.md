@@ -1,6 +1,6 @@
-# BevyDot Examples
+# Dotspace Examples
 
-This directory contains example Graphviz dot files that demonstrate different visualization scenarios with bevydot.
+This directory contains example Graphviz dot files that demonstrate different visualization scenarios with dotspace.
 
 ## Files
 

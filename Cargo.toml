@@ -1,13 +1,13 @@
 [package]
-name = "bevydot"
+name = "dotspace"
 version = "0.2.0"
 edition = "2024"
 license = "MIT"
 authors = ["Ed Sweeney <ed@onextent.com>"]
-description = "3D visualization of Graphviz dot files using Bevy"
-repository = "https://github.com/navicore/bevydot"
+description = "Explore your Graphviz dot files in interactive 3D space"
+repository = "https://github.com/navicore/dotspace"
 readme = "README.md"
-keywords = ["graphviz", "dot", "visualization", "3d", "bevy"]
+keywords = ["graphviz", "dot", "visualization", "3d", "interactive"]
 categories = ["visualization", "graphics"]
 
 [dependencies]

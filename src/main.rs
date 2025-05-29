@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::io::{self, IsTerminal, Read};
 
 #[derive(Parser, Debug)]
-#[command(author, version, about = "3D visualization of Graphviz dot files", long_about = None)]
+#[command(author, version, about = "Explore your Graphviz dot files in interactive 3D space", long_about = None)]
 struct Args {
     /// Optional dot file path. If not provided, reads from stdin.
     file: Option<String>,
@@ -31,7 +31,7 @@ fn main() {
         || {
             if io::stdin().is_terminal() {
                 eprintln!("Error: No input provided. Either specify a file or pipe data to stdin.");
-                eprintln!("Usage: bevydot [FILE] or command | bevydot");
+                eprintln!("Usage: dotspace [FILE] or command | dotspace");
                 std::process::exit(1);
             } else {
                 // Read from stdin if it's piped
