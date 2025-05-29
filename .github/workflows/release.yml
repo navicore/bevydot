@@ -1,4 +1,4 @@
-name: Release with Auto Version (PAT)
+name: Release with Auto Version
 
 on:
   release:
