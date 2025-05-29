@@ -1,3 +1,6 @@
+#![allow(clippy::cast_precision_loss)] // We accept precision loss for f32 conversions
+#![allow(clippy::needless_pass_by_value)] // Bevy systems require owned Res parameters
+
 use bevy::prelude::*;
 use clap::Parser;
 use petgraph::graph::DiGraph;
@@ -25,14 +28,14 @@ fn main() {
     // Read dot content from file or stdin
     let dot_content = if let Some(filename) = args.file {
         std::fs::read_to_string(&filename).unwrap_or_else(|e| {
-            eprintln!("Error reading file '{}': {}", filename, e);
+            eprintln!("Error reading file '{filename}': {e}");
             std::process::exit(1);
         })
     } else if !io::stdin().is_terminal() {
         // Read from stdin if it's piped
         let mut buffer = String::new();
         io::stdin().read_to_string(&mut buffer).unwrap_or_else(|e| {
-            eprintln!("Error reading from stdin: {}", e);
+            eprintln!("Error reading from stdin: {e}");
             std::process::exit(1);
         });
         buffer
@@ -231,17 +234,7 @@ fn get_node_appearance(node_type: &NodeType) -> (Color, f32) {
     }
 }
 
-fn setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    dot_content: Res<DotContent>,
-    camera_config: Res<CameraConfig>,
-) {
-    // Parse the dot content
-    let graph_data = parse_dot_file(&dot_content.0);
-
-    // 3D Camera - positioned to see the hierarchy
+fn setup_camera(commands: &mut Commands, camera_config: &Res<CameraConfig>) {
     let controller = CameraController {
         distance: camera_config.initial_distance,
         speed: camera_config.speed,
@@ -259,6 +252,20 @@ fn setup(
         Transform::from_xyz(x, y, z).looking_at(controller.look_at, Vec3::Y),
         controller,
     ));
+}
+
+fn setup(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    dot_content: Res<DotContent>,
+    camera_config: Res<CameraConfig>,
+) {
+    // Parse the dot content
+    let graph_data = parse_dot_file(&dot_content.0);
+
+    // Setup camera
+    setup_camera(&mut commands, &camera_config);
 
     // Light
     commands.spawn((
@@ -278,6 +285,35 @@ fn setup(
         })),
     ));
 
+    // Create nodes and edges
+    create_graph_visualization(&mut commands, &mut meshes, &mut materials, &graph_data);
+
+    // Store graph data as a resource for later use
+    commands.insert_resource(graph_data);
+
+    // Add control instructions
+    commands.spawn((
+        Text::new("Controls:\nArrows: Move\nShift+Arrows: Rotate\n+/- : Zoom\nESC/Q: Exit"),
+        TextFont {
+            font_size: 16.0,
+            ..default()
+        },
+        TextColor(Color::WHITE),
+        Node {
+            position_type: PositionType::Absolute,
+            top: Val::Px(10.0),
+            left: Val::Px(10.0),
+            ..default()
+        },
+    ));
+}
+
+fn create_graph_visualization(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    graph_data: &GraphData,
+) {
     // Create 3D nodes from the graph with hierarchical layout
     let mut level_counts = HashMap::new();
     let mut level_indices = HashMap::new();
@@ -317,9 +353,8 @@ fn setup(
             NodeType::Organization => meshes.add(Cuboid::new(1.0, 1.0, 1.0)), // Cube
             NodeType::LineOfBusiness => meshes.add(Cylinder::new(0.5, 1.0)),  // Cylinder
             NodeType::Site => meshes.add(Torus::new(0.3, 0.5)),               // Torus
-            NodeType::Team => meshes.add(Sphere::new(0.5)),                   // Sphere
+            NodeType::Team | NodeType::Default => meshes.add(Sphere::new(0.5)), // Sphere
             NodeType::User => meshes.add(Capsule3d::new(0.3, 0.4)),           // Capsule
-            NodeType::Default => meshes.add(Sphere::new(0.5)),
         };
 
         // Spawn node with appropriate shape
@@ -395,35 +430,10 @@ fn setup(
             if let (Some(&from_pos), Some(&to_pos)) =
                 (node_positions.get(&from_idx), node_positions.get(&to_idx))
             {
-                spawn_edge(
-                    &mut commands,
-                    &mut meshes,
-                    edge_material.clone(),
-                    from_pos,
-                    to_pos,
-                );
+                spawn_edge(commands, meshes, edge_material.clone(), from_pos, to_pos);
             }
         }
     }
-
-    // Store graph data as a resource for later use
-    commands.insert_resource(graph_data);
-
-    // Add control instructions
-    commands.spawn((
-        Text::new("Controls:\nArrows: Move\nShift+Arrows: Rotate\n+/- : Zoom\nESC/Q: Exit"),
-        TextFont {
-            font_size: 16.0,
-            ..default()
-        },
-        TextColor(Color::WHITE),
-        Node {
-            position_type: PositionType::Absolute,
-            top: Val::Px(10.0),
-            left: Val::Px(10.0),
-            ..default()
-        },
-    ));
 }
 
 #[derive(Component)]
