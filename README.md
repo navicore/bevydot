@@ -27,6 +27,12 @@ Explore your Graphviz dot files in interactive 3D space. Transform static graph 
 - Rust 1.75 or higher (2024 edition)
 - System dependencies for Bevy (automatically handled on most platforms)
 
+### Building from crates.io
+
+```
+cargo install dotspace
+```
+
 ### Building from Source
 
 ```bash
@@ -177,7 +183,7 @@ dotspace is built with:
 - **clap**: Command-line argument parsing
 
 The visualization uses:
-- Custom dot file parser (handles subset of Graphviz syntax)
+- Custom dot file parser (handles documented Graphviz DSL)
 - Hierarchical layout algorithm with radial distribution
 - Bevy's entity-component system for interactive 3D scenes
 
@@ -185,18 +191,7 @@ The visualization uses:
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Ensure tests pass and clippy is happy (`make all`)
-4. Commit your changes (`git commit -m 'Add amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
-
-- Built with [Bevy Engine](https://bevyengine.org/)
-- Inspired by the need to visualize complex organizational hierarchies and system architectures in 3D
