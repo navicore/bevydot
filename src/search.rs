@@ -33,7 +33,7 @@ pub fn toggle_search(
         search_state.active = true;
         search_state.query.clear();
         search_state.matching_nodes.clear();
-        
+
         if let Ok(mut visibility) = search_box_query.single_mut() {
             *visibility = Visibility::Visible;
         }
@@ -43,7 +43,7 @@ pub fn toggle_search(
         search_state.query.clear();
         search_state.matching_nodes.clear();
         // Don't clear selected_node here - let fly_to_selected_node handle it once
-        
+
         if let Ok(mut visibility) = search_box_query.single_mut() {
             *visibility = Visibility::Hidden;
         }
@@ -63,18 +63,38 @@ pub fn handle_search_input(
 
     // Check for letter keys
     for (key, ch) in [
-        (KeyCode::KeyA, 'a'), (KeyCode::KeyB, 'b'), (KeyCode::KeyC, 'c'),
-        (KeyCode::KeyD, 'd'), (KeyCode::KeyE, 'e'), (KeyCode::KeyF, 'f'),
-        (KeyCode::KeyG, 'g'), (KeyCode::KeyH, 'h'), (KeyCode::KeyI, 'i'),
-        (KeyCode::KeyJ, 'j'), (KeyCode::KeyK, 'k'), (KeyCode::KeyL, 'l'),
-        (KeyCode::KeyM, 'm'), (KeyCode::KeyN, 'n'), (KeyCode::KeyO, 'o'),
-        (KeyCode::KeyP, 'p'), (KeyCode::KeyQ, 'q'), (KeyCode::KeyR, 'r'),
-        (KeyCode::KeyS, 's'), (KeyCode::KeyT, 't'), (KeyCode::KeyU, 'u'),
-        (KeyCode::KeyV, 'v'), (KeyCode::KeyW, 'w'), (KeyCode::KeyX, 'x'),
-        (KeyCode::KeyY, 'y'), (KeyCode::KeyZ, 'z'), (KeyCode::Space, ' '),
+        (KeyCode::KeyA, 'a'),
+        (KeyCode::KeyB, 'b'),
+        (KeyCode::KeyC, 'c'),
+        (KeyCode::KeyD, 'd'),
+        (KeyCode::KeyE, 'e'),
+        (KeyCode::KeyF, 'f'),
+        (KeyCode::KeyG, 'g'),
+        (KeyCode::KeyH, 'h'),
+        (KeyCode::KeyI, 'i'),
+        (KeyCode::KeyJ, 'j'),
+        (KeyCode::KeyK, 'k'),
+        (KeyCode::KeyL, 'l'),
+        (KeyCode::KeyM, 'm'),
+        (KeyCode::KeyN, 'n'),
+        (KeyCode::KeyO, 'o'),
+        (KeyCode::KeyP, 'p'),
+        (KeyCode::KeyQ, 'q'),
+        (KeyCode::KeyR, 'r'),
+        (KeyCode::KeyS, 's'),
+        (KeyCode::KeyT, 't'),
+        (KeyCode::KeyU, 'u'),
+        (KeyCode::KeyV, 'v'),
+        (KeyCode::KeyW, 'w'),
+        (KeyCode::KeyX, 'x'),
+        (KeyCode::KeyY, 'y'),
+        (KeyCode::KeyZ, 'z'),
+        (KeyCode::Space, ' '),
     ] {
         if keyboard_input.just_pressed(key) {
-            if keyboard_input.pressed(KeyCode::ShiftLeft) || keyboard_input.pressed(KeyCode::ShiftRight) {
+            if keyboard_input.pressed(KeyCode::ShiftLeft)
+                || keyboard_input.pressed(KeyCode::ShiftRight)
+            {
                 search_state.query.push(ch.to_ascii_uppercase());
             } else {
                 search_state.query.push(ch);
@@ -97,7 +117,11 @@ pub fn handle_search_input(
     search_state.matching_nodes.clear();
     if !search_state.query.is_empty() {
         for (entity, node, _) in &node_query {
-            if node.name.to_lowercase().contains(&search_state.query.to_lowercase()) {
+            if node
+                .name
+                .to_lowercase()
+                .contains(&search_state.query.to_lowercase())
+            {
                 search_state.matching_nodes.push(entity);
             }
         }
@@ -110,7 +134,9 @@ pub fn handle_search_input(
     for (entity, _, _) in &node_query {
         if search_state.matching_nodes.contains(&entity) {
             // Add highlight component if not present
-            commands.entity(entity).try_insert(NodeHighlight { fade_timer: 1.0 });
+            commands
+                .entity(entity)
+                .try_insert(NodeHighlight { fade_timer: 1.0 });
         } else {
             // Remove highlight if present
             commands.entity(entity).remove::<NodeHighlight>();
@@ -127,7 +153,7 @@ pub fn update_node_highlighting(
     search_state: Res<SearchState>,
 ) {
     let delta = time.delta_secs();
-    
+
     for (entity, mut highlight) in &mut highlight_query {
         // Don't fade if search is active
         if search_state.active {
@@ -135,7 +161,7 @@ pub fn update_node_highlighting(
         } else {
             // Fade out over 20 seconds (10x slower)
             highlight.fade_timer -= delta * 0.05;
-            
+
             if highlight.fade_timer <= 0.0 {
                 commands.entity(entity).remove::<NodeHighlight>();
             }
@@ -153,12 +179,8 @@ pub fn apply_highlight_visuals(
             if let Some(highlight) = highlight {
                 // Apply highlight effect (emissive glow)
                 let intensity = highlight.fade_timer;
-                material.emissive = LinearRgba::new(
-                    intensity * 0.5,
-                    intensity * 0.5,
-                    intensity * 0.0,
-                    1.0,
-                );
+                material.emissive =
+                    LinearRgba::new(intensity * 0.5, intensity * 0.5, intensity * 0.0, 1.0);
             } else {
                 // Remove highlight
                 material.emissive = LinearRgba::BLACK;

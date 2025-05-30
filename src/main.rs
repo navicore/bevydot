@@ -16,8 +16,8 @@ mod visualization;
 use camera::{camera_controls, exit_on_q, setup_camera};
 use parser::parse_dot_file;
 use search::{
-    apply_highlight_visuals, handle_search_input, setup_search_ui,
-    toggle_search, update_node_highlighting,
+    apply_highlight_visuals, handle_search_input, setup_search_ui, toggle_search,
+    update_node_highlighting,
 };
 use types::{CameraSettings, DotContent, LabelSettings, SearchState};
 use ui::{create_node_labels, setup_ui, toggle_label_visibility, update_node_label_positions};

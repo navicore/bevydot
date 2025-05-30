@@ -106,7 +106,7 @@ pub fn update_node_label_positions(
         // Show label if within distance threshold or if show_all_labels is true
         if label_settings.show_all_labels || distance <= label_settings.visibility_distance {
             *visibility = Visibility::Visible;
-            
+
             // Fade labels based on distance (closer = more opaque)
             let fade_start = label_settings.visibility_distance * 0.7;
             let alpha = if distance < fade_start {
@@ -114,7 +114,7 @@ pub fn update_node_label_positions(
             } else {
                 1.0 - ((distance - fade_start) / (label_settings.visibility_distance - fade_start))
             };
-            
+
             text_color.0 = Color::srgba(1.0, 1.0, 1.0, alpha.clamp(0.0, 1.0));
         } else {
             *visibility = Visibility::Hidden;

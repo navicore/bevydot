@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use crate::types::SearchState;
+use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct CameraController {
@@ -137,10 +137,7 @@ pub fn camera_controls(
     }
 }
 
-pub fn exit_on_q(
-    keyboard_input: Res<ButtonInput<KeyCode>>, 
-    mut exit: EventWriter<AppExit>,
-) {
+pub fn exit_on_q(keyboard_input: Res<ButtonInput<KeyCode>>, mut exit: EventWriter<AppExit>) {
     // Only Q exits the application
     if keyboard_input.just_pressed(KeyCode::KeyQ) {
         exit.write(AppExit::Success);
