@@ -1,3 +1,4 @@
+use crate::types::SearchState;
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -47,7 +48,12 @@ pub fn camera_controls(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
     mut query: Query<(&mut Transform, &mut CameraController), With<Camera3d>>,
+    search_state: Res<SearchState>,
 ) {
+    // Don't move camera when searching
+    if search_state.active {
+        return;
+    }
     for (mut transform, mut controller) in &mut query {
         let delta = time.delta_secs();
         let mut changed = false;
@@ -131,8 +137,9 @@ pub fn camera_controls(
     }
 }
 
-pub fn exit_on_esc_or_q(keyboard_input: Res<ButtonInput<KeyCode>>, mut exit: EventWriter<AppExit>) {
-    if keyboard_input.just_pressed(KeyCode::Escape) || keyboard_input.just_pressed(KeyCode::KeyQ) {
+pub fn exit_on_q(keyboard_input: Res<ButtonInput<KeyCode>>, mut exit: EventWriter<AppExit>) {
+    // Only Q exits the application
+    if keyboard_input.just_pressed(KeyCode::KeyQ) {
         exit.write(AppExit::Success);
     }
 }

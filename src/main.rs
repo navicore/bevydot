@@ -8,14 +8,19 @@ use std::io::{self, IsTerminal, Read};
 
 mod camera;
 mod parser;
+mod search;
 mod types;
 mod ui;
 mod visualization;
 
-use camera::{camera_controls, exit_on_esc_or_q, setup_camera};
+use camera::{camera_controls, exit_on_q, setup_camera};
 use parser::parse_dot_file;
-use types::{CameraSettings, DotContent};
-use ui::{create_node_labels, setup_ui, update_node_label_positions};
+use search::{
+    apply_highlight_visuals, handle_search_input, setup_search_ui, toggle_search,
+    update_node_highlighting,
+};
+use types::{CameraSettings, DotContent, LabelSettings, SearchState};
+use ui::{create_node_labels, setup_ui, toggle_label_visibility, update_node_label_positions};
 use visualization::{create_graph_visualization, update_edge_positions};
 
 #[derive(Parser, Debug)]
@@ -31,6 +36,10 @@ struct Args {
     /// Camera movement speed
     #[arg(short, long, default_value = "5.0")]
     speed: f32,
+
+    /// Label visibility distance
+    #[arg(short = 'v', long, default_value = "15.0")]
+    label_distance: f32,
 }
 
 fn main() {
@@ -68,9 +77,19 @@ fn main() {
             distance: args.distance,
             speed: args.speed,
         })
+        .insert_resource(LabelSettings {
+            visibility_distance: args.label_distance,
+            show_all_labels: false,
+        })
+        .insert_resource(SearchState::default())
         .add_systems(Startup, setup)
         .add_systems(Update, camera_controls)
-        .add_systems(Update, exit_on_esc_or_q)
+        .add_systems(Update, exit_on_q)
+        .add_systems(Update, toggle_label_visibility)
+        .add_systems(Update, toggle_search)
+        .add_systems(Update, handle_search_input)
+        .add_systems(Update, update_node_highlighting)
+        .add_systems(Update, apply_highlight_visuals)
         .add_systems(Update, update_edge_positions)
         .add_systems(Update, create_node_labels)
         .add_systems(Update, update_node_label_positions)
@@ -120,4 +139,5 @@ fn setup(
 
     // Setup UI
     setup_ui(&mut commands);
+    setup_search_ui(&mut commands);
 }

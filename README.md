@@ -17,6 +17,15 @@ Explore your Graphviz dot files in interactive 3D space. Transform static graph 
   - Arrow keys for movement
   - Shift+Arrow keys for camera rotation
   - +/- keys for zoom (Mac-friendly)
+- **Smart Label Visibility**: 
+  - Labels only show for nearby nodes (configurable distance)
+  - Hold 'L' to temporarily show all labels
+  - Labels fade as they approach visibility distance
+- **Node Search**: 
+  - Press '/' to open search mode
+  - Type to filter and highlight matching nodes
+  - Press ESC to close search
+  - Highlights slowly fade out over 20 seconds
 - **Unix Philosophy**: Supports both file input and stdin piping
 - **Clear Text Labels**: Node labels rendered as overlay text for clarity
 
@@ -67,10 +76,11 @@ Arguments:
   [FILE]  Optional dot file path. If not provided, reads from stdin
 
 Options:
-  -d, --distance <DISTANCE>  Initial camera distance from center [default: 25.0]
-  -s, --speed <SPEED>        Camera movement speed [default: 5.0]
-  -h, --help                 Print help
-  -V, --version              Print version
+  -d, --distance <DISTANCE>     Initial camera distance from center [default: 25.0]
+  -s, --speed <SPEED>           Camera movement speed [default: 5.0]
+  -v, --label-distance <DIST>   Label visibility distance [default: 15.0]
+  -h, --help                    Print help
+  -V, --version                 Print version
 ```
 
 ### Controls
@@ -81,7 +91,10 @@ Options:
 | Shift + Arrow Keys | Rotate camera around center |
 | + / - | Zoom in/out |
 | PageUp / PageDown | Alternative zoom controls |
-| ESC / Q | Exit application |
+| L (hold) | Show all labels temporarily |
+| / | Open search (type to filter nodes) |
+| ESC | Close search mode |
+| Q | Exit application |
 
 ## Dot File Features
 

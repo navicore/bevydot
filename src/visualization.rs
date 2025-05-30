@@ -52,6 +52,7 @@ pub fn create_graph_visualization(
         // Create material for this node type
         let node_material = materials.add(StandardMaterial {
             base_color: color,
+            emissive: LinearRgba::BLACK,
             ..default()
         });
 

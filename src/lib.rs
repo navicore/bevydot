@@ -4,6 +4,7 @@
 
 pub mod camera;
 pub mod parser;
+pub mod search;
 pub mod types;
 pub mod ui;
 pub mod visualization;
