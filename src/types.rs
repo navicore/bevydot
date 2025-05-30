@@ -59,8 +59,42 @@ pub struct NodeLabel {
     pub node_entity: Entity,
 }
 
+#[derive(Component)]
+pub struct LabelVisibilityIndicator;
+
+#[derive(Component)]
+pub struct SearchBox;
+
+#[derive(Resource, Default)]
+pub struct SearchState {
+    pub active: bool,
+    pub query: String,
+    pub matching_nodes: Vec<Entity>,
+    pub selected_node: Option<Entity>,
+}
+
+#[derive(Component)]
+pub struct NodeHighlight {
+    pub fade_timer: f32,
+}
+
 #[derive(Resource)]
 pub struct CameraSettings {
     pub distance: f32,
     pub speed: f32,
+}
+
+#[derive(Resource)]
+pub struct LabelSettings {
+    pub visibility_distance: f32,
+    pub show_all_labels: bool,
+}
+
+impl Default for LabelSettings {
+    fn default() -> Self {
+        Self {
+            visibility_distance: 15.0,
+            show_all_labels: false,
+        }
+    }
 }
