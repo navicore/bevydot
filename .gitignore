@@ -2,6 +2,7 @@
 /target
 *.rs.bk
 .claude/
+examples/org.dot
 
 # IDE
 .idea/
