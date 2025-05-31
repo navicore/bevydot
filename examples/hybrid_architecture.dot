@@ -1,0 +1,138 @@
+digraph MicroservicesArchitecture {
+    // Graph properties
+    rankdir=TB;
+    compound=true;
+    node [shape=box, style="rounded, filled", fontname="Arial"];
+    edge [fontname="Arial", color="#666666"];
+
+    // Create nested subgraphs to represent team ownership
+    subgraph cluster_platform {
+        label="Platform Team";
+        style="rounded, filled";
+        fillcolor="#F0E6FF";
+        fontsize=14;
+        fontname="Arial Bold";
+        margin=20;
+
+        // Core platform services
+        "auth_service" [label="Auth Service\n(OAuth2/JWT)", fillcolor="#FFE6E6", type="service"];
+        "api_gateway" [label="API Gateway\n(Kong)", fillcolor="#FFE6E6", type="service"];
+        "service_discovery" [label="Service Discovery\n(Consul)", fillcolor="#FFE6E6", type="service"];
+        
+        subgraph cluster_monitoring {
+            label="Monitoring Stack";
+            style="rounded, filled";
+            fillcolor="#E6F3FF";
+            fontsize=12;
+            margin=15;
+            
+            "metrics_collector" [label="Metrics Collector\n(Prometheus)", fillcolor="#E6FFE6", type="tool"];
+            "log_aggregator" [label="Log Aggregator\n(ELK Stack)", fillcolor="#E6FFE6", type="tool"];
+            "alerting" [label="Alerting\n(PagerDuty)", fillcolor="#E6FFE6", type="tool"];
+        }
+    }
+
+    subgraph cluster_customer {
+        label="Customer Experience Team";
+        style="rounded, filled";
+        fillcolor="#FFFFE6";
+        fontsize=14;
+        fontname="Arial Bold";
+        margin=20;
+
+        "web_app" [label="Web App\n(React)", fillcolor="#FFE6F0", type="frontend"];
+        "mobile_app" [label="Mobile App\n(React Native)", fillcolor="#FFE6F0", type="frontend"];
+        "customer_api" [label="Customer API\n(Node.js)", fillcolor="#E6FFE6", type="service"];
+        "notification_service" [label="Notification Service\n(Go)", fillcolor="#E6FFE6", type="service"];
+    }
+
+    subgraph cluster_commerce {
+        label="Commerce Team";
+        style="rounded, filled";
+        fillcolor="#E6FFE6";
+        fontsize=14;
+        fontname="Arial Bold";
+        margin=20;
+
+        "order_service" [label="Order Service\n(Java/Spring)", fillcolor="#E6E6FF", type="service"];
+        "payment_service" [label="Payment Service\n(Java/Spring)", fillcolor="#E6E6FF", type="service"];
+        "inventory_service" [label="Inventory Service\n(Python/FastAPI)", fillcolor="#E6E6FF", type="service"];
+        
+        subgraph cluster_analytics {
+            label="Analytics Pipeline";
+            style="rounded, filled";
+            fillcolor="#F0F0F0";
+            fontsize=12;
+            margin=15;
+            
+            "event_processor" [label="Event Processor\n(Kafka Streams)", fillcolor="#FFE6CC", type="tool"];
+            "analytics_db" [label="Analytics DB\n(ClickHouse)", fillcolor="#FFE6CC", type="database"];
+        }
+    }
+
+    // External systems
+    subgraph cluster_external {
+        label="External Systems";
+        style="rounded, dashed";
+        fillcolor="#F5F5F5";
+        fontsize=14;
+        fontname="Arial Bold";
+        margin=20;
+
+        "payment_gateway" [label="Payment Gateway\n(Stripe)", fillcolor="#CCCCCC", type="external"];
+        "email_provider" [label="Email Provider\n(SendGrid)", fillcolor="#CCCCCC", type="external"];
+        "cdn" [label="CDN\n(CloudFlare)", fillcolor="#CCCCCC", type="external"];
+    }
+
+    // Define service dependencies (directed edges)
+    // Frontend to API Gateway
+    "web_app" -> "api_gateway" [label="HTTPS"];
+    "mobile_app" -> "api_gateway" [label="HTTPS"];
+    
+    // API Gateway to services
+    "api_gateway" -> "customer_api" [label="REST"];
+    "api_gateway" -> "order_service" [label="REST"];
+    "api_gateway" -> "payment_service" [label="REST"];
+    "api_gateway" -> "inventory_service" [label="REST"];
+    
+    // Service to service dependencies
+    "customer_api" -> "auth_service" [label="JWT validation"];
+    "order_service" -> "auth_service" [label="JWT validation"];
+    "payment_service" -> "auth_service" [label="JWT validation"];
+    "inventory_service" -> "auth_service" [label="JWT validation"];
+    
+    "customer_api" -> "notification_service" [label="Events"];
+    "order_service" -> "inventory_service" [label="Stock check"];
+    "order_service" -> "payment_service" [label="Process payment"];
+    "payment_service" -> "payment_gateway" [label="API calls", style="dashed"];
+    "notification_service" -> "email_provider" [label="SMTP", style="dashed"];
+    
+    // Service discovery
+    "customer_api" -> "service_discovery" [label="Register", style="dotted"];
+    "order_service" -> "service_discovery" [label="Register", style="dotted"];
+    "payment_service" -> "service_discovery" [label="Register", style="dotted"];
+    "inventory_service" -> "service_discovery" [label="Register", style="dotted"];
+    "notification_service" -> "service_discovery" [label="Register", style="dotted"];
+    
+    // Monitoring connections
+    "metrics_collector" -> "customer_api" [label="Scrape", style="dotted", color="#999999"];
+    "metrics_collector" -> "order_service" [label="Scrape", style="dotted", color="#999999"];
+    "metrics_collector" -> "payment_service" [label="Scrape", style="dotted", color="#999999"];
+    "metrics_collector" -> "inventory_service" [label="Scrape", style="dotted", color="#999999"];
+    "metrics_collector" -> "alerting" [label="Alerts", color="#FF0000"];
+    
+    // Analytics pipeline
+    "order_service" -> "event_processor" [label="Events", style="dashed"];
+    "payment_service" -> "event_processor" [label="Events", style="dashed"];
+    "event_processor" -> "analytics_db" [label="Store"];
+    
+    // CDN for static assets
+    "cdn" -> "web_app" [label="Cache", style="dashed", dir="back"];
+    "cdn" -> "mobile_app" [label="Cache", style="dashed", dir="back"];
+    
+    // Add a title
+    label="Microservices Architecture\n(Hybrid: Team Organization + Service Dependencies)";
+    fontsize=18;
+    fontname="Arial Bold";
+    labelloc="t";
+}

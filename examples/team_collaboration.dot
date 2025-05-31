@@ -1,0 +1,67 @@
+digraph TeamCollaboration {
+    // Graph properties
+    rankdir=LR;
+    compound=true;
+    node [shape=box, style="rounded, filled", fontname="Arial"];
+    edge [fontname="Arial"];
+
+    // Team structure using subgraphs
+    subgraph cluster_engineering {
+        label="Engineering";
+        style="rounded, filled";
+        fillcolor="#E6F3FF";
+        fontsize=14;
+        fontname="Arial Bold";
+
+        "alice" [label="Alice\n(Tech Lead)", type="team", level="2", fillcolor="#4A90E2"];
+        "bob" [label="Bob\n(Senior Dev)", type="team", level="1", fillcolor="#5BA3F5"];
+        "charlie" [label="Charlie\n(Developer)", type="team", level="1", fillcolor="#5BA3F5"];
+    }
+
+    subgraph cluster_design {
+        label="Design";
+        style="rounded, filled";
+        fillcolor="#FFE6F0";
+        fontsize=14;
+        fontname="Arial Bold";
+
+        "diana" [label="Diana\n(Design Lead)", type="site", level="2", fillcolor="#E91E63"];
+        "eve" [label="Eve\n(UX Designer)", type="site", level="1", fillcolor="#F06292"];
+    }
+
+    subgraph cluster_product {
+        label="Product";
+        style="rounded, filled";
+        fillcolor="#E6FFE6";
+        fontsize=14;
+        fontname="Arial Bold";
+
+        "frank" [label="Frank\n(Product Manager)", type="lob", level="2", fillcolor="#4CAF50"];
+        "grace" [label="Grace\n(Product Analyst)", type="lob", level="1", fillcolor="#66BB6A"];
+    }
+
+    // Collaboration relationships using edges
+    // Product defines requirements
+    "frank" -> "alice" [label="Requirements"];
+    "frank" -> "diana" [label="Vision"];
+    
+    // Design creates mockups
+    "diana" -> "eve" [label="Assigns"];
+    "eve" -> "alice" [label="Mockups"];
+    
+    // Engineering implements
+    "alice" -> "bob" [label="Delegates"];
+    "alice" -> "charlie" [label="Delegates"];
+    "bob" -> "charlie" [label="Code Review"];
+    
+    // Cross-team collaboration
+    "bob" -> "eve" [label="UI Feedback"];
+    "charlie" -> "grace" [label="Analytics"];
+    "grace" -> "frank" [label="Reports"];
+
+    // Add a title
+    label="Team Structure & Collaboration Flow";
+    fontsize=16;
+    fontname="Arial Bold";
+    labelloc="t";
+}

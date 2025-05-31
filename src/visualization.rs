@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use petgraph::graph::NodeIndex;
 use std::collections::HashMap;
 
+#[must_use]
 pub fn get_node_appearance(node_type: &NodeType) -> (Color, f32) {
     // Returns (color, size_multiplier)
     match node_type {

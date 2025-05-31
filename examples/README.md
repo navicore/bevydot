@@ -32,6 +32,26 @@ A project dependency graph showing:
 ### simple_graph.dot
 A basic graph without custom attributes to test default rendering.
 
+### org.dot
+An organizational hierarchy using nested subgraphs instead of edges:
+- Demonstrates containment relationships through subgraph nesting
+- Shows tenant → organization → contact center → site → supervisor hierarchy
+- No explicit edges - relationships are implied by nesting
+
+### hybrid_architecture.dot
+A complex microservices architecture combining both approaches:
+- Subgraphs represent team ownership and logical grouping
+- Edges show service dependencies and API calls
+- Demonstrates how organizational structure and functional relationships can coexist
+- Note: Currently parsed as edge-based only (subgraph structure is visual only)
+
+### team_collaboration.dot
+A simpler hybrid example showing:
+- Team structure using subgraphs (Engineering, Design, Product)
+- Collaboration patterns using directed edges
+- Cross-team communication flows
+- Note: Currently parsed as edge-based only (subgraph structure is visual only)
+
 ## Usage
 
 Run any example with:
@@ -46,6 +66,15 @@ cat examples/network_topology.dot | cargo run
 # With custom camera settings
 cargo run -- -d 30 -s 8 examples/software_architecture.dot
 ```
+
+## Parser Behavior
+
+The dotspace parser currently handles two distinct formats:
+
+1. **Edge-based graphs** (traditional dot format): Files containing `->` edges are parsed to create nodes and explicit connections
+2. **Nested subgraph format**: Files with only subgraphs (no edges) are parsed to create hierarchical containment relationships
+
+Files containing both edges and subgraphs (like `hybrid_architecture.dot`) are currently parsed as edge-based only. The subgraph structure provides visual grouping in standard Graphviz tools but doesn't create containment relationships in dotspace.
 
 ## Custom Attributes
 

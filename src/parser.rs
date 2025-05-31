@@ -1,13 +1,24 @@
+#![allow(clippy::cast_possible_truncation)] // Stack depth won't exceed u32::MAX
+
 use crate::types::{GraphData, NodeInfo, NodeType};
 use petgraph::graph::DiGraph;
 use std::collections::HashMap;
 
+#[must_use]
 pub fn parse_dot_file(content: &str) -> GraphData {
     let mut graph = DiGraph::new();
     let mut node_map = HashMap::new();
     let mut node_attributes = HashMap::new();
 
-    // Parse nodes with attributes
+    // Check if this is a nested subgraph format (no edges)
+    let has_edges = content.contains("->");
+
+    if !has_edges && content.contains("subgraph") {
+        // Parse nested subgraph format
+        return parse_nested_subgraphs(content);
+    }
+
+    // Parse nodes with attributes (original edge-based format)
     let lines: Vec<&str> = content.lines().collect();
     for line in &lines {
         let trimmed = line.trim();
@@ -93,6 +104,130 @@ pub fn parse_dot_file(content: &str) -> GraphData {
                 graph.add_edge(from_idx, to_idx, ());
             }
         }
+    }
+
+    GraphData { graph, node_map }
+}
+
+fn parse_nested_subgraphs(content: &str) -> GraphData {
+    let mut graph = DiGraph::new();
+    let mut node_map = HashMap::new();
+    let mut stack: Vec<(String, Option<petgraph::graph::NodeIndex>)> = Vec::new();
+
+    let lines: Vec<&str> = content.lines().collect();
+    let mut i = 0;
+
+    while i < lines.len() {
+        let line = lines[i].trim();
+
+        // Parse subgraph clusters
+        if line.starts_with("subgraph cluster_") {
+            let cluster_name = line
+                .strip_prefix("subgraph cluster_")
+                .unwrap_or("")
+                .trim_end_matches('{')
+                .trim();
+
+            // Look for the label in the next few lines
+            let mut label = cluster_name.to_string();
+            let level = stack.len() as u32;
+
+            for next_line in lines.iter().skip(i + 1).take(9) {
+                let next_line = next_line.trim();
+                if next_line.starts_with("Label=") || next_line.starts_with("label=") {
+                    label = next_line
+                        .split('=')
+                        .nth(1)
+                        .unwrap_or(cluster_name)
+                        .trim_matches('"')
+                        .trim_matches(';')
+                        .to_string();
+
+                    // Extract meaningful name from label (after the colon if present)
+                    if let Some(colon_pos) = label.find(':') {
+                        label = label[colon_pos + 1..].trim().to_string();
+                    }
+                    break;
+                }
+            }
+
+            // Determine node type based on label content
+            let node_type = if label.to_lowercase().contains("tenant")
+                || label.to_lowercase().contains("organization")
+            {
+                NodeType::Organization
+            } else if label.to_lowercase().contains("contact center") {
+                NodeType::LineOfBusiness
+            } else if label.to_lowercase().contains("site") {
+                NodeType::Site
+            } else {
+                NodeType::Default
+            };
+
+            // Create node for this cluster
+            let node_idx = graph.add_node(NodeInfo {
+                name: label.clone(),
+                node_type,
+                level,
+            });
+
+            node_map.insert(label, node_idx);
+
+            // Connect to parent if exists
+            if let Some((_, Some(parent_idx))) = stack.last() {
+                graph.add_edge(*parent_idx, node_idx, ());
+            }
+
+            stack.push((cluster_name.to_string(), Some(node_idx)));
+        }
+        // Parse standalone nodes (like "supervisor32")
+        else if line.contains('[') && line.contains("label=") && !line.contains("->") {
+            if let Some(node_end) = line.find('[') {
+                let node_id = line[..node_end].trim().trim_matches('"');
+
+                // Extract label from attributes
+                let label = line
+                    .find("label=")
+                    .and_then(|label_start| {
+                        let label_part = &line[label_start + 6..];
+                        label_part.find('"').and_then(|label_end| {
+                            label_part[label_end + 1..].find('"').map(|second_quote| {
+                                label_part[label_end + 1..label_end + 1 + second_quote]
+                                    .replace("\\n", " ")
+                                    .trim()
+                                    .to_string()
+                            })
+                        })
+                    })
+                    .unwrap_or_else(|| node_id.to_string());
+
+                let level = stack.len() as u32;
+                let node_type = if label.to_lowercase().contains("supervisor") {
+                    NodeType::Team
+                } else {
+                    NodeType::User
+                };
+
+                let node_idx = graph.add_node(NodeInfo {
+                    name: label.clone(),
+                    node_type,
+                    level,
+                });
+
+                node_map.insert(label, node_idx);
+
+                // Connect to parent if exists
+                if let Some((_, Some(parent_idx))) = stack.last() {
+                    graph.add_edge(*parent_idx, node_idx, ());
+                }
+            }
+        }
+        // Handle closing braces
+        else if line.contains('}') && !stack.is_empty() {
+            stack.pop();
+        }
+
+        i += 1;
     }
 
     GraphData { graph, node_map }
@@ -193,6 +328,31 @@ mod tests {
             assert_eq!(node.node_type, NodeType::Default);
             assert_eq!(node.level, 0);
         }
+    }
+
+    #[test]
+    fn test_nested_subgraph_parsing() {
+        let dot = r#"
+            digraph OrgHierarchy {
+                subgraph cluster_tenant {
+                    Label="Tenant: main_tenant";
+                    subgraph cluster_org {
+                        label="Organization: org1";
+                        subgraph cluster_site {
+                            label="Site: site1";
+                            "user1" [label="User One"];
+                        }
+                    }
+                }
+            }
+        "#;
+
+        let graph_data = parse_dot_file(dot);
+
+        // Should create 4 nodes: tenant, org, site, and user
+        assert_eq!(graph_data.graph.node_count(), 4);
+        // Should create 3 edges: tenant->org, org->site, site->user
+        assert_eq!(graph_data.graph.edge_count(), 3);
     }
 
     #[test]

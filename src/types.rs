@@ -13,6 +13,7 @@ pub enum NodeType {
 }
 
 impl NodeType {
+    #[must_use]
     pub fn parse(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "organization" | "org" => Self::Organization,
