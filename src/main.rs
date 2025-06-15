@@ -13,7 +13,7 @@ mod types;
 mod ui;
 mod visualization;
 
-use camera::{camera_controls, exit_on_q, setup_camera};
+use camera::{CameraPlugin, setup_camera};
 use parser::parse_dot_file;
 use search::{
     apply_highlight_visuals, handle_search_input, setup_search_ui, toggle_search,
@@ -82,9 +82,8 @@ fn main() {
             show_all_labels: false,
         })
         .insert_resource(SearchState::default())
+        .add_plugins(CameraPlugin)
         .add_systems(Startup, setup)
-        .add_systems(Update, camera_controls)
-        .add_systems(Update, exit_on_q)
         .add_systems(Update, toggle_label_visibility)
         .add_systems(Update, toggle_search)
         .add_systems(Update, handle_search_input)

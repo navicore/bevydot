@@ -12,6 +12,7 @@ categories = ["visualization", "graphics"]
 
 [dependencies]
 bevy = "0.16"
+bevy_panorbit_camera = "0.26"
 dot-parser = "0.5"
 petgraph = "0.8"
 clap = { version = "4.5", features = ["derive"] }

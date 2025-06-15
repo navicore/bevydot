@@ -1,138 +1,153 @@
 use crate::types::SearchState;
 use bevy::prelude::*;
+use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 
-#[derive(Component)]
-pub struct CameraController {
-    pub speed: f32,
-    pub distance: f32,
-    pub orbit_angle: f32, // Horizontal rotation around Y axis
-    pub pitch_angle: f32, // Vertical rotation
-    pub look_at: Vec3,
-}
+pub struct CameraPlugin;
 
-impl Default for CameraController {
-    fn default() -> Self {
-        Self {
-            speed: 5.0,
-            distance: 10.0,
-            orbit_angle: 0.0,
-            pitch_angle: 0.5, // 0.5 radians (~30 degrees) for nice default view
-            look_at: Vec3::ZERO,
-        }
+impl Plugin for CameraPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins(PanOrbitCameraPlugin)
+            .add_systems(Update, keyboard_camera_controls)
+            .add_systems(Update, exit_on_q)
+            .add_systems(Update, debug_camera_state);
     }
 }
 
-pub fn setup_camera(commands: &mut Commands, initial_distance: f32, speed: f32) {
-    let controller = CameraController {
-        distance: initial_distance,
-        speed,
-        ..Default::default()
-    };
-
-    // Calculate initial position based on orbit angles and distance
-    let horizontal_distance = controller.distance * controller.pitch_angle.cos();
-    let x = horizontal_distance * controller.orbit_angle.cos();
-    let y = controller
-        .distance
-        .mul_add(controller.pitch_angle.sin(), controller.look_at.y);
-    let z = horizontal_distance * controller.orbit_angle.sin();
-
+pub fn setup_camera(commands: &mut Commands, initial_distance: f32, _speed: f32) {
+    // Spawn camera with PanOrbitCamera component
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(x, y, z).looking_at(controller.look_at, Vec3::Y),
-        controller,
+        Transform::from_translation(Vec3::new(0.0, initial_distance * 0.5, initial_distance))
+            .looking_at(Vec3::ZERO, Vec3::Y),
+        PanOrbitCamera {
+            // Core configuration
+            focus: Vec3::ZERO,
+            radius: Some(initial_distance),
+            yaw: Some(0.0),
+            pitch: Some(0.5),
+
+            // Initialize targets to match
+            target_focus: Vec3::ZERO,
+            target_radius: initial_distance,
+            target_yaw: 0.0,
+            target_pitch: 0.5,
+
+            // Mouse button configuration
+            button_orbit: MouseButton::Left,
+            button_pan: MouseButton::Right,
+
+            // Sensitivity settings
+            pan_sensitivity: 1.0,
+            orbit_sensitivity: 1.0,
+            zoom_sensitivity: 0.5,
+
+            // Smoothing
+            pan_smoothness: 0.8,
+            orbit_smoothness: 0.8,
+            zoom_smoothness: 0.8,
+
+            // Limits
+            pitch_upper_limit: Some(1.4),
+            pitch_lower_limit: Some(-1.4),
+
+            // Make sure it's enabled
+            enabled: true,
+
+            ..default()
+        },
     ));
 }
 
-pub fn camera_controls(
+fn debug_camera_state(cameras: Query<&PanOrbitCamera>, keyboard: Res<ButtonInput<KeyCode>>) {
+    if keyboard.just_pressed(KeyCode::KeyD) {
+        for cam in &cameras {
+            eprintln!("Camera state:");
+            eprintln!("  enabled: {}", cam.enabled);
+            eprintln!("  focus: {:?}", cam.focus);
+            eprintln!("  yaw: {:?}", cam.yaw);
+            eprintln!("  pitch: {:?}", cam.pitch);
+            eprintln!("  radius: {:?}", cam.radius);
+        }
+    }
+}
+
+pub fn keyboard_camera_controls(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
-    mut query: Query<(&mut Transform, &mut CameraController), With<Camera3d>>,
+    mut cameras: Query<&mut PanOrbitCamera>,
     search_state: Res<SearchState>,
 ) {
-    // Don't move camera when searching
-    if search_state.active {
-        return;
-    }
-    for (mut transform, mut controller) in &mut query {
-        let delta = time.delta_secs();
-        let mut changed = false;
+    for mut cam in &mut cameras {
+        // Disable camera when searching
+        cam.enabled = !search_state.active;
 
-        // Rotation with Shift + Arrow keys
+        if search_state.active {
+            continue;
+        }
+
+        let delta = time.delta_secs();
+        let pan_speed = 5.0 * delta;
+        let rotation_speed = 2.0 * delta;
+        let zoom_speed = 10.0 * delta;
+
+        // Get current yaw for directional movement
+        let current_yaw = cam.yaw.unwrap_or(cam.target_yaw);
+
+        // More intuitive controls:
+        // Arrow keys without shift = pan camera view
+        // Arrow keys with shift = orbit around focus point
+
         if keyboard_input.pressed(KeyCode::ShiftLeft) || keyboard_input.pressed(KeyCode::ShiftRight)
         {
+            // Orbit mode: Rotate camera around the focus point
             if keyboard_input.pressed(KeyCode::ArrowLeft) {
-                controller.orbit_angle += delta * 2.0;
-                changed = true;
+                cam.target_yaw -= rotation_speed;
             }
             if keyboard_input.pressed(KeyCode::ArrowRight) {
-                controller.orbit_angle -= delta * 2.0;
-                changed = true;
+                cam.target_yaw += rotation_speed;
             }
             if keyboard_input.pressed(KeyCode::ArrowUp) {
-                controller.pitch_angle = (controller.pitch_angle + delta).min(1.4); // Limit to ~80 degrees
-                changed = true;
+                cam.target_pitch = (cam.target_pitch + rotation_speed).min(1.4);
             }
             if keyboard_input.pressed(KeyCode::ArrowDown) {
-                controller.pitch_angle = (controller.pitch_angle - delta).max(-1.4);
-                changed = true;
+                cam.target_pitch = (cam.target_pitch - rotation_speed).max(-1.4);
             }
         } else {
-            // Movement with Arrow keys
-            let forward = transform.forward();
-            let right = transform.right();
-            let speed = controller.speed;
+            // Pan mode: Move the camera and focus together
+            // Calculate movement in world space based on camera orientation
+            let forward = Vec3::new(current_yaw.sin(), 0.0, -current_yaw.cos());
+            let right = Vec3::new(current_yaw.cos(), 0.0, current_yaw.sin());
 
             if keyboard_input.pressed(KeyCode::ArrowUp) {
-                controller.look_at += forward * speed * delta;
-                changed = true;
+                // Move forward (into the scene)
+                cam.target_focus += forward * pan_speed;
             }
             if keyboard_input.pressed(KeyCode::ArrowDown) {
-                controller.look_at -= forward * speed * delta;
-                changed = true;
+                // Move backward
+                cam.target_focus -= forward * pan_speed;
             }
             if keyboard_input.pressed(KeyCode::ArrowLeft) {
-                controller.look_at -= right * speed * delta;
-                changed = true;
+                // Move left
+                cam.target_focus -= right * pan_speed;
             }
             if keyboard_input.pressed(KeyCode::ArrowRight) {
-                controller.look_at += right * speed * delta;
-                changed = true;
+                // Move right
+                cam.target_focus += right * pan_speed;
             }
         }
 
-        // Zoom with +/-
-        if keyboard_input.pressed(KeyCode::Equal) || keyboard_input.pressed(KeyCode::NumpadAdd) {
-            controller.distance = delta.mul_add(-10.0, controller.distance).max(2.0);
-            changed = true;
-        }
-        if keyboard_input.pressed(KeyCode::Minus) || keyboard_input.pressed(KeyCode::NumpadSubtract)
+        // Zoom with +/- and PageUp/PageDown
+        if keyboard_input.pressed(KeyCode::Equal)
+            || keyboard_input.pressed(KeyCode::NumpadAdd)
+            || keyboard_input.pressed(KeyCode::PageUp)
         {
-            controller.distance = delta.mul_add(10.0, controller.distance).min(100.0);
-            changed = true;
+            cam.target_radius = (cam.target_radius - zoom_speed).max(2.0);
         }
-
-        // Alternative zoom with PageUp/PageDown
-        if keyboard_input.pressed(KeyCode::PageUp) {
-            controller.distance = delta.mul_add(-10.0, controller.distance).max(2.0);
-            changed = true;
-        }
-        if keyboard_input.pressed(KeyCode::PageDown) {
-            controller.distance = delta.mul_add(10.0, controller.distance).min(100.0);
-            changed = true;
-        }
-
-        // Update camera position if any changes occurred
-        if changed {
-            let horizontal_distance = controller.distance * controller.pitch_angle.cos();
-            let x = horizontal_distance * controller.orbit_angle.cos();
-            let y = controller
-                .distance
-                .mul_add(controller.pitch_angle.sin(), controller.look_at.y);
-            let z = horizontal_distance * controller.orbit_angle.sin();
-
-            transform.translation = Vec3::new(x, y, z) + controller.look_at;
-            transform.look_at(controller.look_at, Vec3::Y);
+        if keyboard_input.pressed(KeyCode::Minus)
+            || keyboard_input.pressed(KeyCode::NumpadSubtract)
+            || keyboard_input.pressed(KeyCode::PageDown)
+        {
+            cam.target_radius = (cam.target_radius + zoom_speed).min(100.0);
         }
     }
 }

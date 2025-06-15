@@ -204,6 +204,17 @@ The visualization uses:
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## Future Roadmap
+
+### Live Data Integration
+**twintalk Integration**: dotspace will support live monitoring of digital twin runtimes through integration with [twintalk](https://github.com/navicore/twintalk). This will provide:
+- Real-time visualization of digital twin object states
+- Dynamic graph updates as twin relationships change
+- Event-driven visual notifications
+- Time-series playback of twin state evolution
+
+Note: twintalk handles all system-specific integrations (IoT, Kubernetes, logistics systems, etc.), while dotspace focuses purely on 3D visualization of the twin graph structure.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
