@@ -2,18 +2,18 @@ use super::{GraphEventSource, SourceError};
 use crate::events::{EventNodeInfo, GraphEvent};
 use dotparser::plantuml;
 
-/// Source for PlantUML format diagrams
+/// Source for `PlantUML` format diagrams
 pub struct PlantUMLSource {
     content: String,
 }
 
 impl PlantUMLSource {
-    /// Creates a new PlantUML source from content
+    /// Creates a new `PlantUML` source from content
     pub fn new(content: String) -> Self {
         Self { content }
     }
 
-    /// Creates a new PlantUML source from a string slice
+    /// Creates a new `PlantUML` source from a string slice
     pub fn from_content(content: &str) -> Self {
         Self::new(content.to_string())
     }
@@ -51,7 +51,7 @@ impl GraphEventSource for PlantUMLSource {
                         node_type: match node_type {
                             dotparser::NodeType::Custom(t) => Some(t),
                             dotparser::NodeType::Actor { actor_type } => {
-                                Some(format!("actor:{}", actor_type))
+                                Some(format!("actor:{actor_type}"))
                             }
                             dotparser::NodeType::DataStore => Some("database".to_string()),
                             dotparser::NodeType::Process => Some("process".to_string()),
