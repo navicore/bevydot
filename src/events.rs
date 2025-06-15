@@ -1,32 +1,11 @@
-use dotparser::{NodeInfo, NodeType};
 use std::fmt;
 
 /// Simplified node information for events
 #[derive(Debug, Clone)]
 pub struct EventNodeInfo {
     pub name: String,
-    pub node_type: NodeType,
+    pub node_type: Option<String>,
     pub level: u32,
-}
-
-impl From<&NodeInfo> for EventNodeInfo {
-    fn from(info: &NodeInfo) -> Self {
-        Self {
-            name: info.name.clone(),
-            node_type: info.node_type.clone(),
-            level: info.level,
-        }
-    }
-}
-
-impl From<EventNodeInfo> for NodeInfo {
-    fn from(info: EventNodeInfo) -> Self {
-        Self {
-            name: info.name,
-            node_type: info.node_type,
-            level: info.level,
-        }
-    }
 }
 
 /// Events that can modify the graph structure
@@ -108,7 +87,6 @@ pub enum EventResult {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dotparser::NodeType;
 
     #[test]
     fn test_event_affects_node() {
@@ -116,7 +94,7 @@ mod tests {
             id: "A".to_string(),
             info: EventNodeInfo {
                 name: "Node A".to_string(),
-                node_type: NodeType::Default,
+                node_type: None,
                 level: 0,
             },
         };
