@@ -88,14 +88,14 @@ mod tests {
 
     #[test]
     fn test_simple_plantuml_to_events() {
-        let plantuml_content = r#"
+        let plantuml_content = r"
             @startuml
             actor User
             participant Server
             User -> Server: Request
             Server --> User: Response
             @enduml
-        "#;
+        ";
 
         let source = PlantUMLSource::from_content(plantuml_content);
         let events = source.events().unwrap();
