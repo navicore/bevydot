@@ -12,7 +12,7 @@ pub fn get_node_appearance(node_type: &Option<String>) -> (Color, f32) {
         Some("site") => (Color::srgb(0.2, 0.6, 0.8), 1.0),         // Blue
         Some("team") => (Color::srgb(0.2, 0.8, 0.5), 0.8),         // Green
         Some("user") => (Color::srgb(0.6, 0.4, 0.8), 0.6),         // Purple, small
-        _ => (Color::srgb(0.5, 0.5, 0.5), 0.7),                     // Gray (default)
+        _ => (Color::srgb(0.5, 0.5, 0.5), 0.7),                    // Gray (default)
     }
 }
 
@@ -60,11 +60,11 @@ pub fn create_graph_visualization(
         // Create mesh based on node type
         let mesh = match node_info.node_type.as_deref() {
             Some("organization") => meshes.add(Cuboid::new(1.0, 1.0, 1.0)), // Cube
-            Some("line_of_business") => meshes.add(Cylinder::new(0.5, 1.0)),  // Cylinder
+            Some("line_of_business") => meshes.add(Cylinder::new(0.5, 1.0)), // Cylinder
             Some("site") => meshes.add(Torus::new(0.3, 0.5)),               // Torus
-            Some("team") => meshes.add(Sphere::new(0.5)), // Sphere
+            Some("team") => meshes.add(Sphere::new(0.5)),                   // Sphere
             Some("user") => meshes.add(Capsule3d::new(0.3, 0.4)),           // Capsule
-            _ => meshes.add(Sphere::new(0.5)), // Default sphere
+            _ => meshes.add(Sphere::new(0.5)),                              // Default sphere
         };
 
         // Spawn node with appropriate shape

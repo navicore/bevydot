@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use crate::graph_state::GraphData as StateGraphData;
+use bevy::prelude::*;
 use petgraph::graph::NodeIndex;
 
 // Re-export types from dotparser for use in other modules

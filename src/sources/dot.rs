@@ -27,10 +27,10 @@ impl GraphEventSource for DotSource {
     fn events(&self) -> Result<Vec<GraphEvent>, SourceError> {
         // Parse the DOT content directly to events
         let dotparser_events = dot::parse(&self.content);
-        
+
         // Convert dotparser events to our internal events
         let mut events = Vec::new();
-        
+
         for event in dotparser_events {
             match event {
                 dotparser::GraphEvent::BatchStart => {
@@ -39,7 +39,12 @@ impl GraphEventSource for DotSource {
                 dotparser::GraphEvent::BatchEnd => {
                     events.push(GraphEvent::BatchEnd);
                 }
-                dotparser::GraphEvent::AddNode { id, label, node_type, properties } => {
+                dotparser::GraphEvent::AddNode {
+                    id,
+                    label,
+                    node_type,
+                    properties,
+                } => {
                     // Convert to our EventNodeInfo
                     let info = EventNodeInfo {
                         name: label.unwrap_or_else(|| id.clone()),
@@ -52,7 +57,7 @@ impl GraphEventSource for DotSource {
                             _ => 0,
                         },
                     };
-                    
+
                     events.push(GraphEvent::AddNode { id, info });
                 }
                 dotparser::GraphEvent::AddEdge { from, to, .. } => {
@@ -63,7 +68,7 @@ impl GraphEventSource for DotSource {
                 }
             }
         }
-        
+
         Ok(events)
     }
 }

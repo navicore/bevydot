@@ -1,4 +1,4 @@
-use crate::events::{EventResult, GraphEvent, EventNodeInfo};
+use crate::events::{EventNodeInfo, EventResult, GraphEvent};
 use bevy::prelude::*;
 use petgraph::graph::{DiGraph, NodeIndex};
 use std::collections::HashMap;
