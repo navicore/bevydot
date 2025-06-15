@@ -7,14 +7,13 @@ use clap::Parser;
 use std::io::{self, IsTerminal, Read};
 
 mod camera;
-mod parser;
 mod search;
 mod types;
 mod ui;
 mod visualization;
 
 use camera::{CameraPlugin, setup_camera};
-use parser::parse_dot_file;
+use dotparser::dot;
 use search::{
     apply_highlight_visuals, handle_search_input, setup_search_ui, toggle_search,
     update_node_highlighting,
@@ -103,7 +102,8 @@ fn setup(
     camera_settings: Res<CameraSettings>,
 ) {
     // Parse the dot content
-    let graph_data = parse_dot_file(&dot_content.0);
+    let parser_data = dot::parse(&dot_content.0);
+    let graph_data = types::GraphData(parser_data);
 
     // Setup camera
     setup_camera(

@@ -1,43 +1,27 @@
 use bevy::prelude::*;
-use petgraph::graph::{DiGraph, NodeIndex};
-use std::collections::HashMap;
+use dotparser::GraphData as ParserGraphData;
+use petgraph::graph::NodeIndex;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum NodeType {
-    Organization,
-    LineOfBusiness,
-    Site,
-    Team,
-    User,
-    Default,
-}
+// Re-export types from dotparser for use in other modules
+pub use dotparser::NodeType;
 
-impl NodeType {
-    #[must_use]
-    pub fn parse(s: &str) -> Self {
-        match s.to_lowercase().as_str() {
-            "organization" | "org" => Self::Organization,
-            "lob" | "lineofbusiness" | "line_of_business" => Self::LineOfBusiness,
-            "site" => Self::Site,
-            "team" => Self::Team,
-            "user" => Self::User,
-            _ => Self::Default,
-        }
+// Wrapper to add Bevy Resource capability to GraphData
+#[derive(Resource)]
+pub struct GraphData(pub ParserGraphData);
+
+// Implement Deref for transparent access to the underlying GraphData
+impl std::ops::Deref for GraphData {
+    type Target = ParserGraphData;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
-#[derive(Debug)]
-pub struct NodeInfo {
-    pub name: String,
-    pub node_type: NodeType,
-    pub level: u32,
-}
-
-#[derive(Resource)]
-pub struct GraphData {
-    pub graph: DiGraph<NodeInfo, ()>,
-    #[allow(dead_code)]
-    pub node_map: HashMap<String, NodeIndex>,
+impl std::ops::DerefMut for GraphData {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
 }
 
 #[derive(Resource)]
