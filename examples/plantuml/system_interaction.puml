@@ -1,0 +1,41 @@
+@startuml
+actor "Mobile App" as App
+participant "API Gateway" as API
+participant "User Service" as UserSvc
+participant "Order Service" as OrderSvc
+database "User DB" as UserDB
+database "Order DB" as OrderDB
+
+App -> API: Create Order Request
+activate API
+
+API -> UserSvc: Validate User
+activate UserSvc
+UserSvc -> UserDB: Get User Details
+activate UserDB
+UserDB --> UserSvc: User Data
+deactivate UserDB
+UserSvc --> API: User Valid
+deactivate UserSvc
+
+API -> OrderSvc: Create Order
+activate OrderSvc
+OrderSvc -> OrderDB: Save Order
+activate OrderDB
+OrderDB --> OrderSvc: Order ID
+deactivate OrderDB
+
+OrderSvc -> UserSvc: Update User Stats
+activate UserSvc
+UserSvc -> UserDB: Update Stats
+UserDB --> UserSvc: OK
+UserSvc --> OrderSvc: Stats Updated
+deactivate UserSvc
+
+OrderSvc --> API: Order Created
+deactivate OrderSvc
+
+API --> App: Order Confirmation
+deactivate API
+
+@enduml

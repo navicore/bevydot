@@ -1,8 +1,13 @@
 # Dotspace Examples
 
-This directory contains example Graphviz dot files that demonstrate different visualization scenarios with dotspace.
+This directory contains example diagram files that demonstrate different visualization scenarios with dotspace.
 
-## Files
+## Directory Structure
+
+- `dot/` - Graphviz DOT format examples
+- `plantuml/` - PlantUML sequence diagram examples
+
+## DOT Examples
 
 ### hierarchy.dot
 The original organizational hierarchy example showing:
@@ -57,22 +62,50 @@ A simpler hybrid example showing:
 Run any example with:
 
 ```bash
-# Direct file
-cargo run -- examples/hierarchy.dot
+# Direct file (format auto-detected)
+cargo run -- examples/dot/hierarchy.dot
+cargo run -- examples/plantuml/login_sequence.puml
 
-# With pipe
-cat examples/network_topology.dot | cargo run
+# With pipe (format auto-detected)
+cat examples/dot/network_topology.dot | cargo run
+cat examples/plantuml/system_interaction.puml | cargo run
 
 # With custom camera settings
-cargo run -- -d 30 -s 8 examples/software_architecture.dot
+cargo run -- -d 30 -s 8 examples/dot/software_architecture.dot
 ```
+
+## PlantUML Examples
+
+### login_sequence.puml
+A simple login sequence showing:
+- User authentication flow
+- Synchronous and asynchronous messages
+- Database interactions
+
+### system_interaction.puml
+A complex system interaction showing:
+- Multiple participants (actors, databases, services)
+- Message types and activation bars
+- Nested interactions
+
+### microservice_flow.puml
+A microservice communication pattern showing:
+- Service-to-service calls
+- Message queuing
+- Error handling flows
 
 ## Parser Behavior
 
-The dotspace parser currently handles two distinct formats:
+The dotspace parser automatically detects the format and handles:
 
+### DOT Format
 1. **Edge-based graphs** (traditional dot format): Files containing `->` edges are parsed to create nodes and explicit connections
 2. **Nested subgraph format**: Files with only subgraphs (no edges) are parsed to create hierarchical containment relationships
+
+### PlantUML Format
+- **Sequence diagrams**: Participants are rendered as nodes, messages as edges
+- Participant types (actor, database, entity) are mapped to appropriate node types
+- Message flow is preserved but temporal sequence is shown through spatial arrangement
 
 Files containing both edges and subgraphs (like `hybrid_architecture.dot`) are currently parsed as edge-based only. The subgraph structure provides visual grouping in standard Graphviz tools but doesn't create containment relationships in dotspace.
 
