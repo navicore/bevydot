@@ -3,7 +3,6 @@
 #![allow(clippy::multiple_crate_versions)] // Bevy dependencies have multiple versions
 
 pub mod camera;
-pub mod parser;
 pub mod search;
 pub mod types;
 pub mod ui;
