@@ -21,9 +21,9 @@ use search::{
     apply_highlight_visuals, handle_search_input, setup_search_ui, toggle_search,
     update_node_highlighting,
 };
-use sources::{detect_format, GraphEventSource};
 use sources::dot::DotSource;
 use sources::plantuml::PlantUMLSource;
+use sources::{GraphEventSource, detect_format};
 use types::{CameraSettings, DotContent, LabelSettings, SearchState};
 use ui::{create_node_labels, setup_ui, toggle_label_visibility, update_node_label_positions};
 use visualization::{create_graph_visualization, update_edge_positions};
@@ -112,7 +112,7 @@ fn setup(
         eprintln!("Warning: Could not detect diagram format, assuming DOT");
         "dot"
     });
-    
+
     let events = match format {
         "plantuml" => {
             let source = PlantUMLSource::from_content(&dot_content.0);

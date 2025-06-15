@@ -26,12 +26,11 @@ impl GraphEventSource for PlantUMLSource {
 
     fn events(&self) -> Result<Vec<GraphEvent>, SourceError> {
         // Parse the PlantUML content
-        let dotparser_events = plantuml::parse(&self.content)
-            .map_err(|e| SourceError::ParseError(e))?;
-        
+        let dotparser_events = plantuml::parse(&self.content).map_err(SourceError::ParseError)?;
+
         // Convert dotparser events to our internal events
         let mut events = Vec::new();
-        
+
         for event in dotparser_events {
             match event {
                 dotparser::GraphEvent::BatchStart => {
@@ -40,13 +39,20 @@ impl GraphEventSource for PlantUMLSource {
                 dotparser::GraphEvent::BatchEnd => {
                     events.push(GraphEvent::BatchEnd);
                 }
-                dotparser::GraphEvent::AddNode { id, label, node_type, properties } => {
+                dotparser::GraphEvent::AddNode {
+                    id,
+                    label,
+                    node_type,
+                    properties,
+                } => {
                     // Convert to our EventNodeInfo
                     let info = EventNodeInfo {
                         name: label.unwrap_or_else(|| id.clone()),
                         node_type: match node_type {
                             dotparser::NodeType::Custom(t) => Some(t),
-                            dotparser::NodeType::Actor { actor_type } => Some(format!("actor:{}", actor_type)),
+                            dotparser::NodeType::Actor { actor_type } => {
+                                Some(format!("actor:{}", actor_type))
+                            }
                             dotparser::NodeType::DataStore => Some("database".to_string()),
                             dotparser::NodeType::Process => Some("process".to_string()),
                             dotparser::NodeType::External => Some("external".to_string()),
@@ -58,7 +64,7 @@ impl GraphEventSource for PlantUMLSource {
                             _ => 0,
                         },
                     };
-                    
+
                     events.push(GraphEvent::AddNode { id, info });
                 }
                 dotparser::GraphEvent::AddEdge { from, to, .. } => {
@@ -71,7 +77,7 @@ impl GraphEventSource for PlantUMLSource {
                 }
             }
         }
-        
+
         Ok(events)
     }
 }

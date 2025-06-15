@@ -108,21 +108,21 @@ impl Default for SourceRegistry {
 /// Detects the format of diagram content
 pub fn detect_format(content: &str) -> Option<&'static str> {
     let trimmed = content.trim();
-    
+
     // Check for PlantUML markers
     if trimmed.contains("@startuml") || trimmed.contains("@startsequence") {
         return Some("plantuml");
     }
-    
+
     // Check for DOT/Graphviz markers
     if trimmed.contains("digraph") || trimmed.contains("graph") || trimmed.contains("->") {
         return Some("dot");
     }
-    
+
     // Default to DOT if we see common DOT patterns
     if trimmed.contains('[') && trimmed.contains(']') {
         return Some("dot");
     }
-    
+
     None
 }
