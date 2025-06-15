@@ -1,7 +1,6 @@
 use super::{GraphEventSource, SourceError};
 use crate::events::{EventNodeInfo, GraphEvent};
 use dotparser::dot;
-use std::collections::HashSet;
 
 /// Source for DOT format diagrams
 pub struct DotSource {
@@ -26,62 +25,45 @@ impl GraphEventSource for DotSource {
     }
 
     fn events(&self) -> Result<Vec<GraphEvent>, SourceError> {
-        // Parse the DOT content
-        let graph_data = dot::parse(&self.content);
-
+        // Parse the DOT content directly to events
+        let dotparser_events = dot::parse(&self.content);
+        
+        // Convert dotparser events to our internal events
         let mut events = Vec::new();
-        let mut seen_nodes = HashSet::new();
-
-        // Start batch for efficiency
-        events.push(GraphEvent::BatchStart);
-
-        // First pass: collect all nodes
-        for node_index in graph_data.graph.node_indices() {
-            if let Some(node_info) = graph_data.graph.node_weight(node_index) {
-                // Use the node's name as its ID
-                let node_id = node_info.name.clone();
-
-                // Handle duplicate names by appending index
-                let final_id = if seen_nodes.contains(&node_id) {
-                    let mut counter = 2;
-                    let mut candidate = format!("{node_id}_{counter}");
-                    while seen_nodes.contains(&candidate) {
-                        counter += 1;
-                        candidate = format!("{node_id}_{counter}");
-                    }
-                    candidate
-                } else {
-                    node_id
-                };
-
-                seen_nodes.insert(final_id.clone());
-
-                events.push(GraphEvent::AddNode {
-                    id: final_id,
-                    info: EventNodeInfo::from(node_info),
-                });
-            }
-        }
-
-        // Second pass: add all edges
-        for edge in graph_data.graph.edge_indices() {
-            if let Some((from_idx, to_idx)) = graph_data.graph.edge_endpoints(edge) {
-                // Get node names to use as IDs
-                if let (Some(from_node), Some(to_node)) = (
-                    graph_data.graph.node_weight(from_idx),
-                    graph_data.graph.node_weight(to_idx),
-                ) {
-                    events.push(GraphEvent::AddEdge {
-                        from: from_node.name.clone(),
-                        to: to_node.name.clone(),
-                    });
+        
+        for event in dotparser_events {
+            match event {
+                dotparser::GraphEvent::BatchStart => {
+                    events.push(GraphEvent::BatchStart);
+                }
+                dotparser::GraphEvent::BatchEnd => {
+                    events.push(GraphEvent::BatchEnd);
+                }
+                dotparser::GraphEvent::AddNode { id, label, node_type, properties } => {
+                    // Convert to our EventNodeInfo
+                    let info = EventNodeInfo {
+                        name: label.unwrap_or_else(|| id.clone()),
+                        node_type: match node_type {
+                            dotparser::NodeType::Custom(t) => Some(t),
+                            _ => None,
+                        },
+                        level: match properties.position {
+                            Some(dotparser::Position::Layer { level }) => level,
+                            _ => 0,
+                        },
+                    };
+                    
+                    events.push(GraphEvent::AddNode { id, info });
+                }
+                dotparser::GraphEvent::AddEdge { from, to, .. } => {
+                    events.push(GraphEvent::AddEdge { from, to });
+                }
+                _ => {
+                    // Ignore other event types for now
                 }
             }
         }
-
-        // End batch
-        events.push(GraphEvent::BatchEnd);
-
+        
         Ok(events)
     }
 }
@@ -90,6 +72,7 @@ impl GraphEventSource for DotSource {
 mod tests {
     use super::*;
     use crate::graph_state::GraphState;
+    use std::collections::HashSet;
 
     #[test]
     fn test_simple_dot_to_events() {
@@ -152,9 +135,8 @@ mod tests {
     }
 
     #[test]
-    fn test_event_stream_produces_same_graph_as_direct_parse() {
-        // This is the key regression test - ensures our event system
-        // produces the exact same graph structure as direct parsing
+    fn test_event_stream_with_attributes() {
+        // Test that our event system properly handles node attributes
         let dot_content = r#"
             digraph {
                 A [type="team", level="2"];
@@ -166,9 +148,6 @@ mod tests {
             }
         "#;
 
-        // Get graph via direct parse
-        let direct_graph = dot::parse(dot_content);
-
         // Get graph via event stream
         let source = DotSource::from_content(dot_content);
         let events = source.events().unwrap();
@@ -176,30 +155,26 @@ mod tests {
         state.process_events(events);
         let event_graph = state.as_graph_data();
 
-        // Compare structure
-        assert_eq!(
-            direct_graph.graph.node_count(),
-            event_graph.graph.node_count()
-        );
-        assert_eq!(
-            direct_graph.graph.edge_count(),
-            event_graph.graph.edge_count()
-        );
+        // Verify structure
+        assert_eq!(event_graph.graph.node_count(), 3);
+        assert_eq!(event_graph.graph.edge_count(), 3);
 
-        // Verify all nodes exist with correct properties
-        for name in direct_graph.node_map.keys() {
-            assert!(event_graph.node_map.contains_key(name));
+        // Verify all nodes exist
+        assert!(event_graph.node_map.contains_key("A"));
+        assert!(event_graph.node_map.contains_key("B"));
+        assert!(event_graph.node_map.contains_key("C"));
 
-            // Check node properties match
-            let direct_idx = direct_graph.node_map[name];
-            let event_idx = event_graph.node_map[name];
+        // Check node properties
+        let a_idx = event_graph.node_map["A"];
+        let a_node = &event_graph.graph[a_idx];
+        assert_eq!(a_node.name, "A");
+        assert_eq!(a_node.node_type, Some("team".to_string()));
+        assert_eq!(a_node.level, 2);
 
-            let direct_node = &direct_graph.graph[direct_idx];
-            let event_node = &event_graph.graph[event_idx];
-
-            assert_eq!(direct_node.name, event_node.name);
-            assert_eq!(direct_node.node_type, event_node.node_type);
-            assert_eq!(direct_node.level, event_node.level);
-        }
+        let b_idx = event_graph.node_map["B"];
+        let b_node = &event_graph.graph[b_idx];
+        assert_eq!(b_node.name, "B");
+        assert_eq!(b_node.node_type, Some("user".to_string()));
+        assert_eq!(b_node.level, 1);
     }
 }

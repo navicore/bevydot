@@ -11,4 +11,4 @@ pub mod types;
 pub mod ui;
 pub mod visualization;
 
-pub use types::{GraphData, NodeType};
+pub use types::GraphData;

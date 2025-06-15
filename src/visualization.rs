@@ -1,18 +1,18 @@
-use crate::types::{GraphData, GraphEdge, GraphNode, NodeType};
+use crate::types::{GraphData, GraphEdge, GraphNode};
 use bevy::prelude::*;
 use petgraph::graph::NodeIndex;
 use std::collections::HashMap;
 
 #[must_use]
-pub fn get_node_appearance(node_type: &NodeType) -> (Color, f32) {
+pub fn get_node_appearance(node_type: &Option<String>) -> (Color, f32) {
     // Returns (color, size_multiplier)
-    match node_type {
-        NodeType::Organization => (Color::srgb(0.8, 0.2, 0.2), 1.5), // Red, large
-        NodeType::LineOfBusiness => (Color::srgb(0.8, 0.5, 0.2), 1.2), // Orange
-        NodeType::Site => (Color::srgb(0.2, 0.6, 0.8), 1.0),         // Blue
-        NodeType::Team => (Color::srgb(0.2, 0.8, 0.5), 0.8),         // Green
-        NodeType::User => (Color::srgb(0.6, 0.4, 0.8), 0.6),         // Purple, small
-        NodeType::Default => (Color::srgb(0.5, 0.5, 0.5), 0.7),      // Gray
+    match node_type.as_deref() {
+        Some("organization") => (Color::srgb(0.8, 0.2, 0.2), 1.5), // Red, large
+        Some("line_of_business") => (Color::srgb(0.8, 0.5, 0.2), 1.2), // Orange
+        Some("site") => (Color::srgb(0.2, 0.6, 0.8), 1.0),         // Blue
+        Some("team") => (Color::srgb(0.2, 0.8, 0.5), 0.8),         // Green
+        Some("user") => (Color::srgb(0.6, 0.4, 0.8), 0.6),         // Purple, small
+        _ => (Color::srgb(0.5, 0.5, 0.5), 0.7),                     // Gray (default)
     }
 }
 
@@ -58,12 +58,13 @@ pub fn create_graph_visualization(
         });
 
         // Create mesh based on node type
-        let mesh = match node_info.node_type {
-            NodeType::Organization => meshes.add(Cuboid::new(1.0, 1.0, 1.0)), // Cube
-            NodeType::LineOfBusiness => meshes.add(Cylinder::new(0.5, 1.0)),  // Cylinder
-            NodeType::Site => meshes.add(Torus::new(0.3, 0.5)),               // Torus
-            NodeType::Team | NodeType::Default => meshes.add(Sphere::new(0.5)), // Sphere
-            NodeType::User => meshes.add(Capsule3d::new(0.3, 0.4)),           // Capsule
+        let mesh = match node_info.node_type.as_deref() {
+            Some("organization") => meshes.add(Cuboid::new(1.0, 1.0, 1.0)), // Cube
+            Some("line_of_business") => meshes.add(Cylinder::new(0.5, 1.0)),  // Cylinder
+            Some("site") => meshes.add(Torus::new(0.3, 0.5)),               // Torus
+            Some("team") => meshes.add(Sphere::new(0.5)), // Sphere
+            Some("user") => meshes.add(Capsule3d::new(0.3, 0.4)),           // Capsule
+            _ => meshes.add(Sphere::new(0.5)), // Default sphere
         };
 
         // Spawn node with appropriate shape
