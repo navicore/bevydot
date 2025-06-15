@@ -4,7 +4,7 @@ use bevy::prelude::*;
 pub fn setup_ui(commands: &mut Commands) {
     // Add control instructions
     commands.spawn((
-        Text::new("Controls:\nArrows: Move\nShift+Arrows: Rotate\n+/- : Zoom\nL: Show all labels\n/: Search nodes\nESC: Close search\nQ: Exit"),
+        Text::new("Controls:\nArrows: Pan camera\nShift+Arrows: Orbit view\n+/- or Scroll: Zoom\nLeft drag: Orbit\nRight drag: Pan\nL: Show all labels\n/: Search nodes\nESC: Close search\nQ: Exit"),
         TextFont {
             font_size: 16.0,
             ..default()
