@@ -116,7 +116,8 @@ pub fn update_node_label_positions(
                 if distance < fade_start {
                     1.0
                 } else {
-                    1.0 - ((distance - fade_start) / (label_settings.visibility_distance - fade_start))
+                    1.0 - ((distance - fade_start)
+                        / (label_settings.visibility_distance - fade_start))
                 }
             };
 
