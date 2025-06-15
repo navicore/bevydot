@@ -1,8 +1,33 @@
-use crate::events::{EventResult, GraphEvent};
+use crate::events::{EventNodeInfo, EventResult, GraphEvent};
 use bevy::prelude::*;
-use dotparser::{GraphData as ParserGraphData, NodeInfo};
 use petgraph::graph::{DiGraph, NodeIndex};
 use std::collections::HashMap;
+
+/// Node information stored in the graph
+#[derive(Debug, Clone)]
+pub struct NodeInfo {
+    pub name: String,
+    pub node_type: Option<String>,
+    pub level: u32,
+}
+
+impl From<EventNodeInfo> for NodeInfo {
+    fn from(info: EventNodeInfo) -> Self {
+        Self {
+            name: info.name,
+            node_type: info.node_type,
+            level: info.level,
+        }
+    }
+}
+
+/// Graph data structure
+#[derive(Debug, Clone)]
+pub struct GraphData {
+    pub graph: DiGraph<NodeInfo, ()>,
+    #[allow(dead_code)]
+    pub node_map: HashMap<String, NodeIndex>,
+}
 
 /// Manages the current state of the graph based on events
 #[derive(Resource)]
@@ -128,8 +153,8 @@ impl GraphState {
         events.into_iter().map(|e| self.process_event(e)).collect()
     }
 
-    /// Creates a new `ParserGraphData` by rebuilding the graph
-    pub fn as_graph_data(&self) -> ParserGraphData {
+    /// Creates a new `GraphData` by rebuilding the graph
+    pub fn as_graph_data(&self) -> GraphData {
         let mut new_graph = DiGraph::new();
         let mut new_map = HashMap::new();
 
@@ -170,7 +195,7 @@ impl GraphState {
             }
         }
 
-        ParserGraphData {
+        GraphData {
             graph: new_graph,
             node_map: new_map,
         }
@@ -207,7 +232,6 @@ impl Default for GraphState {
 mod tests {
     use super::*;
     use crate::events::EventNodeInfo;
-    use dotparser::NodeType;
 
     #[test]
     fn test_add_and_remove_nodes() {
@@ -218,7 +242,7 @@ mod tests {
             id: "A".to_string(),
             info: EventNodeInfo {
                 name: "Node A".to_string(),
-                node_type: NodeType::Default,
+                node_type: None,
                 level: 0,
             },
         });
@@ -231,7 +255,7 @@ mod tests {
             id: "A".to_string(),
             info: EventNodeInfo {
                 name: "Node A".to_string(),
-                node_type: NodeType::Default,
+                node_type: None,
                 level: 0,
             },
         });
@@ -258,7 +282,7 @@ mod tests {
                 id: "A".to_string(),
                 info: EventNodeInfo {
                     name: "A".to_string(),
-                    node_type: NodeType::Default,
+                    node_type: None,
                     level: 0,
                 },
             },
@@ -266,7 +290,7 @@ mod tests {
                 id: "B".to_string(),
                 info: EventNodeInfo {
                     name: "B".to_string(),
-                    node_type: NodeType::Default,
+                    node_type: None,
                     level: 0,
                 },
             },

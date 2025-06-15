@@ -1,17 +1,17 @@
+use crate::graph_state::GraphData as StateGraphData;
 use bevy::prelude::*;
-use dotparser::GraphData as ParserGraphData;
 use petgraph::graph::NodeIndex;
 
 // Re-export types from dotparser for use in other modules
-pub use dotparser::NodeType;
+// NodeType is no longer needed - it's now just Option<String>
 
 // Wrapper to add Bevy Resource capability to GraphData
 #[derive(Resource)]
-pub struct GraphData(pub ParserGraphData);
+pub struct GraphData(pub StateGraphData);
 
 // Implement Deref for transparent access to the underlying GraphData
 impl std::ops::Deref for GraphData {
-    type Target = ParserGraphData;
+    type Target = StateGraphData;
 
     fn deref(&self) -> &Self::Target {
         &self.0
