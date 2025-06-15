@@ -15,7 +15,7 @@ mod types;
 mod ui;
 mod visualization;
 
-use camera::{setup_camera, CameraPlugin};
+use camera::{CameraPlugin, setup_camera};
 use graph_state::GraphState;
 use search::{
     apply_highlight_visuals, handle_search_input, setup_search_ui, toggle_search,
@@ -23,7 +23,7 @@ use search::{
 };
 use sources::dot::DotSource;
 use sources::plantuml::PlantUMLSource;
-use sources::{detect_format, GraphEventSource};
+use sources::{GraphEventSource, detect_format};
 use types::{CameraSettings, DotContent, LabelSettings, SearchState};
 use ui::{create_node_labels, setup_ui, toggle_label_visibility, update_node_label_positions};
 use visualization::{create_graph_visualization, update_edge_positions};
