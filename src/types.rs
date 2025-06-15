@@ -78,7 +78,7 @@ pub struct LabelSettings {
 impl Default for LabelSettings {
     fn default() -> Self {
         Self {
-            visibility_distance: 15.0,
+            visibility_distance: 10.0,  // Reduced from 15.0 for more noticeable toggle effect
             show_all_labels: false,
         }
     }

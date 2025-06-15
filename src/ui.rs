@@ -70,15 +70,14 @@ pub fn toggle_label_visibility(
         return;
     }
     // Toggle show all labels with 'L' key
-    if keyboard_input.pressed(KeyCode::KeyL) {
-        label_settings.show_all_labels = true;
+    if keyboard_input.just_pressed(KeyCode::KeyL) {
+        label_settings.show_all_labels = !label_settings.show_all_labels;
         if let Ok(mut text) = indicator_query.single_mut() {
-            text.0 = "Showing all labels".to_string();
-        }
-    } else {
-        label_settings.show_all_labels = false;
-        if let Ok(mut text) = indicator_query.single_mut() {
-            text.0 = String::new();
+            text.0 = if label_settings.show_all_labels {
+                "Showing all labels".to_string()
+            } else {
+                String::new()
+            };
         }
     }
 }
@@ -108,11 +107,17 @@ pub fn update_node_label_positions(
             *visibility = Visibility::Visible;
 
             // Fade labels based on distance (closer = more opaque)
-            let fade_start = label_settings.visibility_distance * 0.7;
-            let alpha = if distance < fade_start {
+            let alpha = if label_settings.show_all_labels {
+                // When forcing all labels visible, make them fully opaque
                 1.0
             } else {
-                1.0 - ((distance - fade_start) / (label_settings.visibility_distance - fade_start))
+                // Normal distance-based fading
+                let fade_start = label_settings.visibility_distance * 0.7;
+                if distance < fade_start {
+                    1.0
+                } else {
+                    1.0 - ((distance - fade_start) / (label_settings.visibility_distance - fade_start))
+                }
             };
 
             text_color.0 = Color::srgba(1.0, 1.0, 1.0, alpha.clamp(0.0, 1.0));
