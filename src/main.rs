@@ -13,7 +13,7 @@ mod types;
 mod ui;
 mod visualization;
 
-use camera::{setup_camera, CameraPlugin};
+use camera::{CameraPlugin, setup_camera};
 use parser::parse_dot_file;
 use search::{
     apply_highlight_visuals, handle_search_input, setup_search_ui, toggle_search,

@@ -76,8 +76,12 @@ clippy-fix:
 		-A clippy::missing_docs_in_private_items \
 		-A clippy::missing_const_for_fn
 
-# Format code
+# Check code formatting
 fmt:
+	cargo fmt -- --check
+
+# Format code (fix formatting issues)
+fmt-fix:
 	cargo fmt
 
 # Clean build artifacts
@@ -101,7 +105,8 @@ help:
 	@echo "  make clippy       - Run clippy with CI settings"
 	@echo "  make clippy-all   - Run clippy on code, tests, and examples"
 	@echo "  make clippy-fix   - Run clippy and auto-fix issues"
-	@echo "  make fmt          - Format code with rustfmt"
+	@echo "  make fmt          - Check code formatting"
+	@echo "  make fmt-fix      - Fix code formatting with rustfmt"
 	@echo "  make clean        - Clean build artifacts"
 	@echo "  make run          - Run with hierarchy.dot example"
 	@echo "  make run-stdin    - Run with stdin example"

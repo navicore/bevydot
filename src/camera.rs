@@ -25,43 +25,40 @@ pub fn setup_camera(commands: &mut Commands, initial_distance: f32, _speed: f32)
             radius: Some(initial_distance),
             yaw: Some(0.0),
             pitch: Some(0.5),
-            
+
             // Initialize targets to match
             target_focus: Vec3::ZERO,
             target_radius: initial_distance,
             target_yaw: 0.0,
             target_pitch: 0.5,
-            
+
             // Mouse button configuration
             button_orbit: MouseButton::Left,
             button_pan: MouseButton::Right,
-            
+
             // Sensitivity settings
             pan_sensitivity: 1.0,
             orbit_sensitivity: 1.0,
             zoom_sensitivity: 0.5,
-            
+
             // Smoothing
             pan_smoothness: 0.8,
             orbit_smoothness: 0.8,
             zoom_smoothness: 0.8,
-            
+
             // Limits
             pitch_upper_limit: Some(1.4),
             pitch_lower_limit: Some(-1.4),
-            
+
             // Make sure it's enabled
             enabled: true,
-            
+
             ..default()
         },
     ));
 }
 
-fn debug_camera_state(
-    cameras: Query<&PanOrbitCamera>,
-    keyboard: Res<ButtonInput<KeyCode>>,
-) {
+fn debug_camera_state(cameras: Query<&PanOrbitCamera>, keyboard: Res<ButtonInput<KeyCode>>) {
     if keyboard.just_pressed(KeyCode::KeyD) {
         for cam in &cameras {
             eprintln!("Camera state:");
@@ -83,24 +80,25 @@ pub fn keyboard_camera_controls(
     for mut cam in &mut cameras {
         // Disable camera when searching
         cam.enabled = !search_state.active;
-        
+
         if search_state.active {
             continue;
         }
-        
+
         let delta = time.delta_secs();
         let pan_speed = 5.0 * delta;
         let rotation_speed = 2.0 * delta;
         let zoom_speed = 10.0 * delta;
-        
+
         // Get current yaw for directional movement
         let current_yaw = cam.yaw.unwrap_or(cam.target_yaw);
-        
+
         // More intuitive controls:
         // Arrow keys without shift = pan camera view
         // Arrow keys with shift = orbit around focus point
-        
-        if keyboard_input.pressed(KeyCode::ShiftLeft) || keyboard_input.pressed(KeyCode::ShiftRight) {
+
+        if keyboard_input.pressed(KeyCode::ShiftLeft) || keyboard_input.pressed(KeyCode::ShiftRight)
+        {
             // Orbit mode: Rotate camera around the focus point
             if keyboard_input.pressed(KeyCode::ArrowLeft) {
                 cam.target_yaw -= rotation_speed;
@@ -119,7 +117,7 @@ pub fn keyboard_camera_controls(
             // Calculate movement in world space based on camera orientation
             let forward = Vec3::new(current_yaw.sin(), 0.0, -current_yaw.cos());
             let right = Vec3::new(current_yaw.cos(), 0.0, current_yaw.sin());
-            
+
             if keyboard_input.pressed(KeyCode::ArrowUp) {
                 // Move forward (into the scene)
                 cam.target_focus += forward * pan_speed;
@@ -137,14 +135,18 @@ pub fn keyboard_camera_controls(
                 cam.target_focus += right * pan_speed;
             }
         }
-        
+
         // Zoom with +/- and PageUp/PageDown
-        if keyboard_input.pressed(KeyCode::Equal) || keyboard_input.pressed(KeyCode::NumpadAdd) 
-            || keyboard_input.pressed(KeyCode::PageUp) {
+        if keyboard_input.pressed(KeyCode::Equal)
+            || keyboard_input.pressed(KeyCode::NumpadAdd)
+            || keyboard_input.pressed(KeyCode::PageUp)
+        {
             cam.target_radius = (cam.target_radius - zoom_speed).max(2.0);
         }
-        if keyboard_input.pressed(KeyCode::Minus) || keyboard_input.pressed(KeyCode::NumpadSubtract)
-            || keyboard_input.pressed(KeyCode::PageDown) {
+        if keyboard_input.pressed(KeyCode::Minus)
+            || keyboard_input.pressed(KeyCode::NumpadSubtract)
+            || keyboard_input.pressed(KeyCode::PageDown)
+        {
             cam.target_radius = (cam.target_radius + zoom_speed).min(100.0);
         }
     }
