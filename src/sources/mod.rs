@@ -36,21 +36,21 @@ impl From<std::io::Error> for SourceError {
 }
 
 /// Trait for graph event sources
-/// 
+///
 /// All sources (static files, live streams, etc.) implement this trait
 /// to provide a unified stream of graph events.
 pub trait GraphEventSource: Send + Sync {
     /// Returns a human-readable name for this source type
     fn source_name(&self) -> &'static str;
-    
+
     /// Converts the source content into a stream of graph events
-    /// 
+    ///
     /// For static sources (like DOT files), this will typically return
     /// all events at once with BatchStart/BatchEnd markers.
-    /// 
+    ///
     /// For live sources, this may return events over time.
     fn events(&self) -> Result<Vec<GraphEvent>, SourceError>;
-    
+
     /// Returns true if this source can handle live updates
     fn is_live(&self) -> bool {
         false
@@ -69,22 +69,22 @@ impl SourceRegistry {
             sources: Vec::new(),
         }
     }
-    
+
     /// Registers a new event source
     pub fn register(&mut self, source: Box<dyn GraphEventSource>) {
         self.sources.push(source);
     }
-    
+
     /// Returns the number of registered sources
     pub fn len(&self) -> usize {
         self.sources.len()
     }
-    
+
     /// Returns true if no sources are registered
     pub fn is_empty(&self) -> bool {
         self.sources.is_empty()
     }
-    
+
     /// Gets a source by name
     pub fn get_source(&self, name: &str) -> Option<&dyn GraphEventSource> {
         self.sources

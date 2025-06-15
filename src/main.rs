@@ -17,12 +17,12 @@ mod visualization;
 
 use camera::{CameraPlugin, setup_camera};
 use graph_state::GraphState;
-use sources::dot::DotSource;
-use sources::GraphEventSource;
 use search::{
     apply_highlight_visuals, handle_search_input, setup_search_ui, toggle_search,
     update_node_highlighting,
 };
+use sources::GraphEventSource;
+use sources::dot::DotSource;
 use types::{CameraSettings, DotContent, LabelSettings, SearchState};
 use ui::{create_node_labels, setup_ui, toggle_label_visibility, update_node_label_positions};
 use visualization::{create_graph_visualization, update_edge_positions};
@@ -109,10 +109,10 @@ fn setup(
     // Create graph state from DOT content
     let dot_source = DotSource::from_str(&dot_content.0);
     let events = dot_source.events().expect("Failed to parse DOT file");
-    
+
     let mut graph_state = GraphState::new();
     graph_state.process_events(events);
-    
+
     // Convert to GraphData for compatibility
     let graph_data = types::GraphData(graph_state.as_graph_data());
 

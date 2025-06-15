@@ -33,40 +33,26 @@ impl From<EventNodeInfo> for NodeInfo {
 #[derive(Debug, Clone)]
 pub enum GraphEvent {
     /// Add a new node to the graph
-    AddNode {
-        id: String,
-        info: EventNodeInfo,
-    },
-    
+    AddNode { id: String, info: EventNodeInfo },
+
     /// Update an existing node's properties
-    UpdateNode {
-        id: String,
-        info: EventNodeInfo,
-    },
-    
+    UpdateNode { id: String, info: EventNodeInfo },
+
     /// Remove a node from the graph
-    RemoveNode {
-        id: String,
-    },
-    
+    RemoveNode { id: String },
+
     /// Add an edge between two nodes
-    AddEdge {
-        from: String,
-        to: String,
-    },
-    
+    AddEdge { from: String, to: String },
+
     /// Remove an edge between two nodes
-    RemoveEdge {
-        from: String,
-        to: String,
-    },
-    
+    RemoveEdge { from: String, to: String },
+
     /// Clear the entire graph
     Clear,
-    
+
     /// Start of a batch of events (for optimization)
     BatchStart,
-    
+
     /// End of a batch of events
     BatchEnd,
 }
@@ -132,7 +118,7 @@ mod tests {
                 level: 0,
             },
         };
-        
+
         assert!(event.affects_node("A"));
         assert!(!event.affects_node("B"));
     }
@@ -143,7 +129,7 @@ mod tests {
             from: "A".to_string(),
             to: "B".to_string(),
         };
-        
+
         assert!(event.affects_node("A"));
         assert!(event.affects_node("B"));
         assert!(!event.affects_node("C"));
