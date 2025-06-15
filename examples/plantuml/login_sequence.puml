@@ -1,0 +1,25 @@
+@startuml
+actor User
+participant "Web Server" as Web
+database "Auth DB" as DB
+
+User -> Web: Login Request
+activate Web
+
+Web -> DB: Validate Credentials
+activate DB
+DB --> Web: User Valid
+deactivate DB
+
+Web -> Web: Generate Token
+
+Web --> User: Login Success + Token
+deactivate Web
+
+User -> Web: Access Protected Resource
+activate Web
+Web -> Web: Validate Token
+Web --> User: Resource Data
+deactivate Web
+
+@enduml

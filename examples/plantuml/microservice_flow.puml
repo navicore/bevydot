@@ -1,0 +1,45 @@
+@startuml
+actor Client
+participant "Load Balancer" as LB
+participant "Service A" as SvcA
+participant "Service B" as SvcB
+participant "Message Queue" as MQ
+database "Cache" as Cache
+database "Database" as DB
+
+Client -> LB: Request
+activate LB
+
+LB -> SvcA: Route Request
+activate SvcA
+
+SvcA -> Cache: Check Cache
+activate Cache
+Cache --> SvcA: Cache Miss
+deactivate Cache
+
+SvcA -> DB: Query Data
+activate DB
+DB --> SvcA: Result Set
+deactivate DB
+
+SvcA -> Cache: Store in Cache
+Cache --> SvcA: OK
+
+SvcA ->> MQ: Publish Event
+activate MQ
+
+SvcA --> LB: Response
+deactivate SvcA
+
+LB --> Client: Response
+deactivate LB
+
+MQ -> SvcB: Consume Event
+activate SvcB
+SvcB -> SvcB: Process Event
+SvcB --> MQ: Acknowledge
+deactivate SvcB
+deactivate MQ
+
+@enduml

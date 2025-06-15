@@ -21,8 +21,9 @@ use search::{
     apply_highlight_visuals, handle_search_input, setup_search_ui, toggle_search,
     update_node_highlighting,
 };
-use sources::GraphEventSource;
 use sources::dot::DotSource;
+use sources::plantuml::PlantUMLSource;
+use sources::{GraphEventSource, detect_format};
 use types::{CameraSettings, DotContent, LabelSettings, SearchState};
 use ui::{create_node_labels, setup_ui, toggle_label_visibility, update_node_label_positions};
 use visualization::{create_graph_visualization, update_edge_positions};
@@ -106,9 +107,19 @@ fn setup(
     dot_content: Res<DotContent>,
     camera_settings: Res<CameraSettings>,
 ) {
-    // Create graph state from DOT content
-    let dot_source = DotSource::from_content(&dot_content.0);
-    let events = dot_source.events().expect("Failed to parse DOT file");
+    // Detect format and create appropriate source
+    let format = detect_format(&dot_content.0).unwrap_or_else(|| {
+        eprintln!("Warning: Could not detect diagram format, assuming DOT");
+        "dot"
+    });
+
+    let events = if format == "plantuml" {
+        let source = PlantUMLSource::from_content(&dot_content.0);
+        source.events().expect("Failed to parse PlantUML file")
+    } else {
+        let source = DotSource::from_content(&dot_content.0);
+        source.events().expect("Failed to parse DOT file")
+    };
 
     let mut graph_state = GraphState::new();
     graph_state.process_events(events);
