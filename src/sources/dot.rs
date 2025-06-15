@@ -15,7 +15,7 @@ impl DotSource {
     }
 
     /// Creates a new DOT source from a string slice
-    pub fn from_str(content: &str) -> Self {
+    pub fn from_content(content: &str) -> Self {
         Self::new(content.to_string())
     }
 }
@@ -44,10 +44,10 @@ impl GraphEventSource for DotSource {
                 // Handle duplicate names by appending index
                 let final_id = if seen_nodes.contains(&node_id) {
                     let mut counter = 2;
-                    let mut candidate = format!("{}_{}", node_id, counter);
+                    let mut candidate = format!("{node_id}_{counter}");
                     while seen_nodes.contains(&candidate) {
                         counter += 1;
-                        candidate = format!("{}_{}", node_id, counter);
+                        candidate = format!("{node_id}_{counter}");
                     }
                     candidate
                 } else {
@@ -93,14 +93,14 @@ mod tests {
 
     #[test]
     fn test_simple_dot_to_events() {
-        let dot_content = r#"
+        let dot_content = r"
             digraph {
                 A -> B;
                 B -> C;
             }
-        "#;
+        ";
 
-        let source = DotSource::from_str(dot_content);
+        let source = DotSource::from_content(dot_content);
         let events = source.events().unwrap();
 
         // Should have: BatchStart, 3 AddNode, 2 AddEdge, BatchEnd
@@ -134,7 +134,7 @@ mod tests {
             }
         "#;
 
-        let source = DotSource::from_str(dot_content);
+        let source = DotSource::from_content(dot_content);
         let events = source.events().unwrap();
 
         // Should handle duplicate "Server" nodes
@@ -170,7 +170,7 @@ mod tests {
         let direct_graph = dot::parse(dot_content);
 
         // Get graph via event stream
-        let source = DotSource::from_str(dot_content);
+        let source = DotSource::from_content(dot_content);
         let events = source.events().unwrap();
         let mut state = GraphState::new();
         state.process_events(events);
@@ -187,7 +187,7 @@ mod tests {
         );
 
         // Verify all nodes exist with correct properties
-        for (name, _) in &direct_graph.node_map {
+        for name in direct_graph.node_map.keys() {
             assert!(event_graph.node_map.contains_key(name));
 
             // Check node properties match

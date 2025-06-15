@@ -49,12 +49,12 @@ impl GraphState {
 
             GraphEvent::UpdateNode { id, info } => {
                 if let Some(&idx) = self.node_map.get(&id) {
-                    if let Some(node) = self.graph.node_weight_mut(idx) {
-                        *node = info.into();
-                        EventResult::Success
-                    } else {
-                        EventResult::NodeNotFound
-                    }
+                    self.graph
+                        .node_weight_mut(idx)
+                        .map_or(EventResult::NodeNotFound, |node| {
+                            *node = info.into();
+                            EventResult::Success
+                        })
                 } else {
                     EventResult::NodeNotFound
                 }
@@ -128,7 +128,7 @@ impl GraphState {
         events.into_iter().map(|e| self.process_event(e)).collect()
     }
 
-    /// Creates a new ParserGraphData by rebuilding the graph
+    /// Creates a new `ParserGraphData` by rebuilding the graph
     pub fn as_graph_data(&self) -> ParserGraphData {
         let mut new_graph = DiGraph::new();
         let mut new_map = HashMap::new();
@@ -177,16 +177,19 @@ impl GraphState {
     }
 
     /// Returns the number of nodes in the graph
+    #[allow(dead_code)] // Used in tests
     pub fn node_count(&self) -> usize {
         self.graph.node_count()
     }
 
     /// Returns the number of edges in the graph
+    #[allow(dead_code)] // Used in tests
     pub fn edge_count(&self) -> usize {
         self.graph.edge_count()
     }
 
     /// Gets a node by ID
+    #[allow(dead_code)] // For future use
     pub fn get_node(&self, id: &str) -> Option<&NodeInfo> {
         self.node_map
             .get(id)

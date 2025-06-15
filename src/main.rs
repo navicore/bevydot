@@ -107,7 +107,7 @@ fn setup(
     camera_settings: Res<CameraSettings>,
 ) {
     // Create graph state from DOT content
-    let dot_source = DotSource::from_str(&dot_content.0);
+    let dot_source = DotSource::from_content(&dot_content.0);
     let events = dot_source.events().expect("Failed to parse DOT file");
 
     let mut graph_state = GraphState::new();

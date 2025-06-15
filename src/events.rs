@@ -31,6 +31,7 @@ impl From<EventNodeInfo> for NodeInfo {
 
 /// Events that can modify the graph structure
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Some variants are for future use
 pub enum GraphEvent {
     /// Add a new node to the graph
     AddNode { id: String, info: EventNodeInfo },
@@ -59,6 +60,7 @@ pub enum GraphEvent {
 
 impl GraphEvent {
     /// Returns true if this event modifies node data
+    #[allow(dead_code)] // For future use
     pub fn affects_node(&self, node_id: &str) -> bool {
         match self {
             Self::AddNode { id, .. } | Self::UpdateNode { id, .. } | Self::RemoveNode { id } => {
@@ -76,11 +78,11 @@ impl GraphEvent {
 impl fmt::Display for GraphEvent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::AddNode { id, info } => write!(f, "AddNode({}: {})", id, info.name),
-            Self::UpdateNode { id, info } => write!(f, "UpdateNode({}: {})", id, info.name),
-            Self::RemoveNode { id } => write!(f, "RemoveNode({})", id),
-            Self::AddEdge { from, to } => write!(f, "AddEdge({} -> {})", from, to),
-            Self::RemoveEdge { from, to } => write!(f, "RemoveEdge({} -> {})", from, to),
+            Self::AddNode { id, info } => write!(f, "AddNode({id}: {})", info.name),
+            Self::UpdateNode { id, info } => write!(f, "UpdateNode({id}: {})", info.name),
+            Self::RemoveNode { id } => write!(f, "RemoveNode({id})"),
+            Self::AddEdge { from, to } => write!(f, "AddEdge({from} -> {to})"),
+            Self::RemoveEdge { from, to } => write!(f, "RemoveEdge({from} -> {to})"),
             Self::Clear => write!(f, "Clear"),
             Self::BatchStart => write!(f, "BatchStart"),
             Self::BatchEnd => write!(f, "BatchEnd"),
@@ -93,9 +95,9 @@ impl fmt::Display for GraphEvent {
 pub enum EventResult {
     /// Event was processed successfully
     Success,
-    /// Node already exists (for AddNode)
+    /// Node already exists (for `AddNode`)
     NodeExists,
-    /// Node not found (for UpdateNode, RemoveNode, edges)
+    /// Node not found (for `UpdateNode`, `RemoveNode`, edges)
     NodeNotFound,
     /// Edge already exists
     EdgeExists,

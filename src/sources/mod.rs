@@ -5,6 +5,7 @@ pub mod dot;
 
 /// Errors that can occur during source processing
 #[derive(Debug)]
+#[allow(dead_code)] // Variants will be used as we add more sources
 pub enum SourceError {
     /// The format of the input could not be determined
     UnknownFormat,
@@ -52,16 +53,19 @@ pub trait GraphEventSource: Send + Sync {
     fn events(&self) -> Result<Vec<GraphEvent>, SourceError>;
 
     /// Returns true if this source can handle live updates
+    #[allow(dead_code)] // Will be used for live sources like twintalk
     fn is_live(&self) -> bool {
         false
     }
 }
 
 /// Registry for managing multiple event sources
+#[allow(dead_code)] // Will be used when we add format detection
 pub struct SourceRegistry {
     sources: Vec<Box<dyn GraphEventSource>>,
 }
 
+#[allow(dead_code)] // Will be used when we add format detection
 impl SourceRegistry {
     /// Creates a new empty registry
     pub fn new() -> Self {
@@ -90,7 +94,7 @@ impl SourceRegistry {
         self.sources
             .iter()
             .find(|s| s.source_name().eq_ignore_ascii_case(name))
-            .map(|s| s.as_ref())
+            .map(std::convert::AsRef::as_ref)
     }
 }
 
