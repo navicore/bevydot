@@ -89,6 +89,7 @@ impl GraphEventSource for DotSource {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::graph_state::GraphState;
     
     #[test]
     fn test_simple_dot_to_events() {
@@ -142,5 +143,51 @@ mod tests {
         // Should have unique IDs
         let unique_ids: HashSet<_> = node_events.iter().cloned().collect();
         assert_eq!(node_events.len(), unique_ids.len());
+    }
+    
+    #[test]
+    fn test_event_stream_produces_same_graph_as_direct_parse() {
+        // This is the key regression test - ensures our event system
+        // produces the exact same graph structure as direct parsing
+        let dot_content = r#"
+            digraph {
+                A [type="team", level="2"];
+                B [type="user", level="1"];
+                C [type="user", level="1"];
+                A -> B;
+                A -> C;
+                B -> C;
+            }
+        "#;
+        
+        // Get graph via direct parse
+        let direct_graph = dot::parse(dot_content);
+        
+        // Get graph via event stream
+        let source = DotSource::from_str(dot_content);
+        let events = source.events().unwrap();
+        let mut state = GraphState::new();
+        state.process_events(events);
+        let event_graph = state.as_graph_data();
+        
+        // Compare structure
+        assert_eq!(direct_graph.graph.node_count(), event_graph.graph.node_count());
+        assert_eq!(direct_graph.graph.edge_count(), event_graph.graph.edge_count());
+        
+        // Verify all nodes exist with correct properties
+        for (name, _) in &direct_graph.node_map {
+            assert!(event_graph.node_map.contains_key(name));
+            
+            // Check node properties match
+            let direct_idx = direct_graph.node_map[name];
+            let event_idx = event_graph.node_map[name];
+            
+            let direct_node = &direct_graph.graph[direct_idx];
+            let event_node = &event_graph.graph[event_idx];
+            
+            assert_eq!(direct_node.name, event_node.name);
+            assert_eq!(direct_node.node_type, event_node.node_type);
+            assert_eq!(direct_node.level, event_node.level);
+        }
     }
 }
