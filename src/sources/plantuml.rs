@@ -61,7 +61,7 @@ impl GraphEventSource for PlantUMLSource {
                         level: match properties.position {
                             Some(dotparser::Position::Sequential { .. }) => 0, // All sequence participants at same level
                             Some(dotparser::Position::Layer { level }) => level,
-                            _ => 0,
+                            _ => 1,
                         },
                     };
 
@@ -148,7 +148,7 @@ mod tests {
             .count();
         let edge_count = events
             .iter()
-            .filter(|e| matches!(e, GraphEvent::AddEdge { .. }))
+            .filter(|e| matches!(e, GraphEvent::AddRichEdge { .. }))
             .count();
 
         assert_eq!(node_count, 2);

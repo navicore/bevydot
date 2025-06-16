@@ -126,17 +126,17 @@ fn spawn_edge(
     to_idx: NodeIndex,
     edge_info: Option<&crate::graph_state::EdgeInfo>,
 ) {
-    // Determine edge appearance based on type
-    let (color, thickness) = if let Some(info) = edge_info {
-        match info.edge_type.as_deref() {
-            Some("sync") => (Color::srgb(0.2, 0.4, 0.8), 0.03), // Blue, thick
-            Some("async") => (Color::srgb(0.8, 0.4, 0.2), 0.02), // Orange, normal
-            Some("return") => (Color::srgb(0.4, 0.8, 0.4), 0.015), // Green, thin
-            _ => (Color::srgb(0.4, 0.4, 0.4), 0.02),            // Gray default
-        }
-    } else {
-        (Color::srgb(0.4, 0.4, 0.4), 0.02)
-    };
+    let (color, thickness) = edge_info.map_or_else(
+        || (Color::srgb(0.4, 0.4, 0.4), 0.02), // Default gray
+        |info| {
+            match info.edge_type.as_deref() {
+                Some("sync") => (Color::srgb(0.2, 0.4, 0.8), 0.03), // Blue, thick
+                Some("async") => (Color::srgb(0.8, 0.4, 0.2), 0.02), // Orange, normal
+                Some("return") => (Color::srgb(0.4, 0.8, 0.4), 0.015), // Green, thin
+                _ => (Color::srgb(0.4, 0.4, 0.4), 0.02),            // Gray default
+            }
+        },
+    );
 
     // Create material for this edge type
     let edge_material = if edge_info.is_some() {
