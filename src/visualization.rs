@@ -85,7 +85,7 @@ pub fn create_graph_visualization(
             Some("process") => meshes.add(Sphere::new(0.5)), // Sphere for process
             Some("external") => meshes.add(Torus::new(0.25, 0.5)), // Torus for external
 
-            _ => meshes.add(Sphere::new(0.5)), // Default sphere
+            _ => meshes.add(Sphere::new(0.4)), // Default sphere
         };
 
         // Spawn node with appropriate shape
