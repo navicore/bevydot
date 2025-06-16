@@ -59,7 +59,7 @@ impl GraphEventSource for PlantUMLSource {
                             _ => None,
                         },
                         level: match properties.position {
-                            Some(dotparser::Position::Sequential { order }) => order,
+                            Some(dotparser::Position::Sequential { .. }) => 0, // All sequence participants at same level
                             Some(dotparser::Position::Layer { level }) => level,
                             _ => 0,
                         },
@@ -67,10 +67,44 @@ impl GraphEventSource for PlantUMLSource {
 
                     events.push(GraphEvent::AddNode { id, info });
                 }
-                dotparser::GraphEvent::AddEdge { from, to, .. } => {
-                    // For now, just create basic edges
-                    // In the future, we might want to handle message types differently
-                    events.push(GraphEvent::AddEdge { from, to });
+                dotparser::GraphEvent::AddEdge {
+                    from,
+                    to,
+                    edge_type,
+                    label,
+                    ..
+                } => {
+                    // Extract edge properties based on edge type
+                    let (edge_type_str, sequence_num) = match &edge_type {
+                        dotparser::EdgeType::Message {
+                            message_type,
+                            sequence,
+                        } => {
+                            // Convert MessageType to string manually
+                            let type_str = match message_type {
+                                dotparser::MessageType::Synchronous => "sync",
+                                dotparser::MessageType::Asynchronous => "async",
+                                dotparser::MessageType::Return => "return",
+                                dotparser::MessageType::Create => "create",
+                                dotparser::MessageType::Destroy => "destroy",
+                            };
+                            (Some(type_str.to_string()), *sequence)
+                        }
+                        _ => (None, None),
+                    };
+
+                    // Preserve rich edge information from PlantUML
+                    let edge_info = crate::events::EventEdgeInfo {
+                        label,
+                        edge_type: edge_type_str,
+                        sequence: sequence_num,
+                    };
+
+                    events.push(GraphEvent::AddRichEdge {
+                        from,
+                        to,
+                        info: edge_info,
+                    });
                 }
                 _ => {
                     // Ignore other event types for now

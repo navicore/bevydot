@@ -37,6 +37,17 @@ pub struct GraphNode {
 pub struct GraphEdge {
     pub from: NodeIndex,
     pub to: NodeIndex,
+    #[allow(dead_code)] // Will be used for edge labels
+    pub label: Option<String>,
+    #[allow(dead_code)] // Used for edge appearance
+    pub edge_type: Option<String>,
+    #[allow(dead_code)] // Will be used for temporal visualization
+    pub sequence: Option<u32>,
+}
+
+#[derive(Component)]
+pub struct EdgeArrowHead {
+    pub edge: Entity,
 }
 
 #[derive(Component)]

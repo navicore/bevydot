@@ -8,6 +8,14 @@ pub struct EventNodeInfo {
     pub level: u32,
 }
 
+/// Edge properties for rich edge information
+#[derive(Debug, Clone)]
+pub struct EventEdgeInfo {
+    pub label: Option<String>,
+    pub edge_type: Option<String>, // e.g., "sync", "async", "return"
+    pub sequence: Option<u32>,     // For sequence diagrams
+}
+
 /// Events that can modify the graph structure
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Some variants are for future use
@@ -23,6 +31,13 @@ pub enum GraphEvent {
 
     /// Add an edge between two nodes
     AddEdge { from: String, to: String },
+
+    /// Add a rich edge with properties
+    AddRichEdge {
+        from: String,
+        to: String,
+        info: EventEdgeInfo,
+    },
 
     /// Remove an edge between two nodes
     RemoveEdge { from: String, to: String },
@@ -48,6 +63,7 @@ impl GraphEvent {
             Self::AddEdge { from, to } | Self::RemoveEdge { from, to } => {
                 from == node_id || to == node_id
             }
+            Self::AddRichEdge { from, to, .. } => from == node_id || to == node_id,
             Self::Clear => true,
             Self::BatchStart | Self::BatchEnd => false,
         }
@@ -61,6 +77,13 @@ impl fmt::Display for GraphEvent {
             Self::UpdateNode { id, info } => write!(f, "UpdateNode({id}: {})", info.name),
             Self::RemoveNode { id } => write!(f, "RemoveNode({id})"),
             Self::AddEdge { from, to } => write!(f, "AddEdge({from} -> {to})"),
+            Self::AddRichEdge { from, to, info } => {
+                write!(f, "AddRichEdge({from} -> {to}")?;
+                if let Some(label) = &info.label {
+                    write!(f, ": {label}")?;
+                }
+                write!(f, ")")
+            }
             Self::RemoveEdge { from, to } => write!(f, "RemoveEdge({from} -> {to})"),
             Self::Clear => write!(f, "Clear"),
             Self::BatchStart => write!(f, "BatchStart"),

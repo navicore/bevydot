@@ -95,14 +95,17 @@ pub fn create_graph_visualization(
             if let (Some(&from_entity), Some(&to_entity)) =
                 (node_entities.get(&from_idx), node_entities.get(&to_idx))
             {
+                let edge_info = graph_data.graph.edge_weight(edge);
                 spawn_edge(
                     commands,
                     meshes,
+                    materials,
                     edge_material.clone(),
                     from_entity,
                     to_entity,
                     from_idx,
                     to_idx,
+                    edge_info,
                 );
             }
         }
@@ -111,29 +114,81 @@ pub fn create_graph_visualization(
     node_entities
 }
 
+#[allow(clippy::too_many_arguments)]
 fn spawn_edge(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
-    material: Handle<StandardMaterial>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    default_material: Handle<StandardMaterial>,
     _from_entity: Entity,
     _to_entity: Entity,
     from_idx: NodeIndex,
     to_idx: NodeIndex,
+    edge_info: Option<&crate::graph_state::EdgeInfo>,
 ) {
-    commands.spawn((
-        Mesh3d(meshes.add(Cylinder::new(0.02, 1.0))), // We'll update the transform in a system
-        MeshMaterial3d(material),
-        Transform::default(),
-        GraphEdge {
-            from: from_idx,
-            to: to_idx,
-        },
-    ));
+    // Determine edge appearance based on type
+    let (color, thickness) = if let Some(info) = edge_info {
+        match info.edge_type.as_deref() {
+            Some("sync") => (Color::srgb(0.2, 0.4, 0.8), 0.03), // Blue, thick
+            Some("async") => (Color::srgb(0.8, 0.4, 0.2), 0.02), // Orange, normal
+            Some("return") => (Color::srgb(0.4, 0.8, 0.4), 0.015), // Green, thin
+            _ => (Color::srgb(0.4, 0.4, 0.4), 0.02),            // Gray default
+        }
+    } else {
+        (Color::srgb(0.4, 0.4, 0.4), 0.02)
+    };
+
+    // Create material for this edge type
+    let edge_material = if edge_info.is_some() {
+        materials.add(StandardMaterial {
+            base_color: color,
+            emissive: LinearRgba::from(color) * 0.2, // Slight glow for sequence edges
+            ..default()
+        })
+    } else {
+        default_material
+    };
+
+    let edge_component = GraphEdge {
+        from: from_idx,
+        to: to_idx,
+        label: edge_info.and_then(|info| info.label.clone()),
+        edge_type: edge_info.and_then(|info| info.edge_type.clone()),
+        sequence: edge_info.and_then(|info| info.sequence),
+    };
+
+    // Create main edge cylinder
+    let edge_entity = commands
+        .spawn((
+            Mesh3d(meshes.add(Cylinder::new(thickness, 1.0))),
+            MeshMaterial3d(edge_material.clone()),
+            Transform::default(),
+            edge_component,
+        ))
+        .id();
+
+    // Add arrow head for directional edges
+    if edge_info.is_some() {
+        commands.spawn((
+            Mesh3d(meshes.add(Cone {
+                radius: thickness * 3.0,
+                height: thickness * 8.0,
+            })),
+            MeshMaterial3d(edge_material),
+            Transform::default(),
+            crate::types::EdgeArrowHead { edge: edge_entity },
+        ));
+    }
 }
 
+#[allow(clippy::type_complexity)]
 pub fn update_edge_positions(
     node_query: Query<(&Transform, &GraphNode)>,
-    mut edge_query: Query<(&mut Transform, &GraphEdge), Without<GraphNode>>,
+    mut edge_query: Query<(Entity, &mut Transform, &GraphEdge), Without<GraphNode>>,
+    mut arrow_query: Query<
+        (&mut Transform, &crate::types::EdgeArrowHead),
+        (Without<GraphEdge>, Without<GraphNode>),
+    >,
     _graph_data: Res<GraphData>,
 ) {
     // Create a map of node indices to positions
@@ -143,7 +198,7 @@ pub fn update_edge_positions(
     }
 
     // Update edge positions
-    for (mut edge_transform, graph_edge) in &mut edge_query {
+    for (edge_entity, mut edge_transform, graph_edge) in &mut edge_query {
         if let (Some(&from_pos), Some(&to_pos)) = (
             node_positions.get(&graph_edge.from),
             node_positions.get(&graph_edge.to),
@@ -164,6 +219,16 @@ pub fn update_edge_positions(
             edge_transform.translation = midpoint;
             edge_transform.rotation = rotation;
             edge_transform.scale = Vec3::new(1.0, distance, 1.0);
+
+            // Update arrow head position if this edge has one
+            for (mut arrow_transform, arrow_head) in &mut arrow_query {
+                if arrow_head.edge == edge_entity {
+                    // Position arrow at the end of the edge, slightly before the target node
+                    let arrow_offset = direction.normalize() * 0.5; // Offset from target
+                    arrow_transform.translation = to_pos - arrow_offset;
+                    arrow_transform.rotation = rotation;
+                }
+            }
         }
     }
 }

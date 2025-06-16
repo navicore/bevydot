@@ -1,4 +1,4 @@
-use crate::events::{EventNodeInfo, EventResult, GraphEvent};
+use crate::events::{EventEdgeInfo, EventNodeInfo, EventResult, GraphEvent};
 use bevy::prelude::*;
 use petgraph::graph::{DiGraph, NodeIndex};
 use std::collections::HashMap;
@@ -21,10 +21,28 @@ impl From<EventNodeInfo> for NodeInfo {
     }
 }
 
+/// Edge information stored in the graph
+#[derive(Debug, Clone, Default)]
+pub struct EdgeInfo {
+    pub label: Option<String>,
+    pub edge_type: Option<String>,
+    pub sequence: Option<u32>,
+}
+
+impl From<EventEdgeInfo> for EdgeInfo {
+    fn from(info: EventEdgeInfo) -> Self {
+        Self {
+            label: info.label,
+            edge_type: info.edge_type,
+            sequence: info.sequence,
+        }
+    }
+}
+
 /// Graph data structure
 #[derive(Debug, Clone)]
 pub struct GraphData {
-    pub graph: DiGraph<NodeInfo, ()>,
+    pub graph: DiGraph<NodeInfo, EdgeInfo>,
     #[allow(dead_code)]
     pub node_map: HashMap<String, NodeIndex>,
 }
@@ -33,7 +51,7 @@ pub struct GraphData {
 #[derive(Resource)]
 pub struct GraphState {
     /// The underlying graph structure
-    graph: DiGraph<NodeInfo, ()>,
+    graph: DiGraph<NodeInfo, EdgeInfo>,
     /// Mapping from node IDs to graph indices
     node_map: HashMap<String, NodeIndex>,
     /// Whether we're currently in a batch update
@@ -102,7 +120,22 @@ impl GraphState {
                         if self.graph.find_edge(from_idx, to_idx).is_some() {
                             EventResult::EdgeExists
                         } else {
-                            self.graph.add_edge(from_idx, to_idx, ());
+                            self.graph.add_edge(from_idx, to_idx, EdgeInfo::default());
+                            EventResult::Success
+                        }
+                    }
+                    _ => EventResult::NodeNotFound,
+                }
+            }
+
+            GraphEvent::AddRichEdge { from, to, info } => {
+                match (self.node_map.get(&from), self.node_map.get(&to)) {
+                    (Some(&from_idx), Some(&to_idx)) => {
+                        // Check if edge already exists
+                        if self.graph.find_edge(from_idx, to_idx).is_some() {
+                            EventResult::EdgeExists
+                        } else {
+                            self.graph.add_edge(from_idx, to_idx, info.into());
                             EventResult::Success
                         }
                     }
@@ -189,7 +222,9 @@ impl GraphState {
                     if let (Some(&new_from), Some(&new_to)) =
                         (new_map.get(from_id), new_map.get(to_id))
                     {
-                        new_graph.add_edge(new_from, new_to, ());
+                        // Copy edge with its properties
+                        let edge_info = self.graph.edge_weight(edge).cloned().unwrap_or_default();
+                        new_graph.add_edge(new_from, new_to, edge_info);
                     }
                 }
             }
