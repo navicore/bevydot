@@ -5,6 +5,10 @@
 
 Explore your Graphviz dot files in interactive 3D space. Transform static graph diagrams into navigable 3D experiences.
 
+[!./docs/topology.png]
+
+![an image showing the space of a system topology](docs/topology.png)
+
 ![Rust CI](https://github.com/navicore/dotspace/workflows/CI/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -13,15 +17,15 @@ Explore your Graphviz dot files in interactive 3D space. Transform static graph 
 - **3D Visualization**: Renders Graphviz dot files as interactive 3D scenes
 - **Node Types**: Different shapes and colors for various node types (organization, team, user, etc.)
 - **Hierarchical Layout**: Automatic vertical and radial positioning based on node levels
-- **Interactive Navigation**: 
+- **Interactive Navigation**:
   - Arrow keys for movement
   - Shift+Arrow keys for camera rotation
   - +/- keys for zoom (Mac-friendly)
-- **Smart Label Visibility**: 
+- **Smart Label Visibility**:
   - Labels only show for nearby nodes (configurable distance)
   - Hold 'L' to temporarily show all labels
   - Labels fade as they approach visibility distance
-- **Node Search**: 
+- **Node Search**:
   - Press '/' to open search mode
   - Type to filter and highlight matching nodes
   - Press ESC to close search
@@ -109,7 +113,7 @@ digraph Organization {
     "CEO" [type="organization", level="3"];
     "CTO" [type="team", level="2"];
     "Dev1" [type="user", level="1"];
-    
+
     "CEO" -> "CTO";
     "CTO" -> "Dev1";
 }
@@ -214,6 +218,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - Time-series playback of twin state evolution
 
 Note: twintalk handles all system-specific integrations (IoT, Kubernetes, logistics systems, etc.), while dotspace focuses purely on 3D visualization of the twin graph structure.
+
+![an image showing the space of a system topology](docs/sequence.png)
 
 ## License
 
