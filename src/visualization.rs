@@ -13,15 +13,15 @@ pub fn get_node_appearance(node_type: Option<&str>) -> (Color, f32) {
         Some("site") => (Color::srgb(0.2, 0.6, 0.8), 1.0),         // Blue
         Some("team") => (Color::srgb(0.2, 0.8, 0.5), 0.8),         // Green
         Some("user") => (Color::srgb(0.6, 0.4, 0.8), 0.6),         // Purple, small
-        
+
         // PlantUML sequence diagram types
-        Some("database") => (Color::srgb(0.2, 0.4, 0.7), 1.0),     // Dark blue
+        Some("database") => (Color::srgb(0.2, 0.4, 0.7), 1.0), // Dark blue
         Some("actor:participant") => (Color::srgb(0.3, 0.7, 0.3), 0.8), // Green for regular participants
         Some(t) if t.starts_with("actor:") => (Color::srgb(0.9, 0.6, 0.2), 0.9), // Orange for actors
-        Some("process") => (Color::srgb(0.7, 0.7, 0.2), 0.8),      // Yellow
-        Some("external") => (Color::srgb(0.5, 0.2, 0.7), 0.9),     // Purple
-        
-        _ => (Color::srgb(0.5, 0.5, 0.5), 0.7),                    // Gray (default)
+        Some("process") => (Color::srgb(0.7, 0.7, 0.2), 0.8),                    // Yellow
+        Some("external") => (Color::srgb(0.5, 0.2, 0.7), 0.9),                   // Purple
+
+        _ => (Color::srgb(0.5, 0.5, 0.5), 0.7), // Gray (default)
     }
 }
 
@@ -74,18 +74,18 @@ pub fn create_graph_visualization(
             Some("site") => meshes.add(Torus::new(0.3, 0.5)),               // Torus
             Some("team") => meshes.add(Sphere::new(0.6)),                   // Sphere
             Some("user") => meshes.add(Capsule3d::new(0.3, 0.4)),           // Capsule
-            
+
             // PlantUML sequence diagram shapes
-            Some("database") => meshes.add(Cylinder::new(0.6, 0.8)),        // Wide cylinder for DB
+            Some("database") => meshes.add(Cylinder::new(0.6, 0.8)), // Wide cylinder for DB
             Some("actor:participant") => meshes.add(Cuboid::new(0.8, 0.8, 0.8)), // Cube for services
             Some(t) if t.starts_with("actor:") => {
                 // Actor as a humanoid shape (capsule)
                 meshes.add(Capsule3d::new(0.4, 0.6))
             }
-            Some("process") => meshes.add(Sphere::new(0.5)),                // Sphere for process
-            Some("external") => meshes.add(Torus::new(0.25, 0.5)),          // Torus for external
-            
-            _ => meshes.add(Sphere::new(0.5)),                              // Default sphere
+            Some("process") => meshes.add(Sphere::new(0.5)), // Sphere for process
+            Some("external") => meshes.add(Torus::new(0.25, 0.5)), // Torus for external
+
+            _ => meshes.add(Sphere::new(0.5)), // Default sphere
         };
 
         // Spawn node with appropriate shape
